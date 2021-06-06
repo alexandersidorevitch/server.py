@@ -16,7 +16,7 @@ Initialize DB and generate game map:
 
     $ cd server
     $ invoke db-init
-    $ invoke generate-map
+    $ invoke generate-all-maps
 
 Run server:
 
