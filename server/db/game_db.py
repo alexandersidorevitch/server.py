@@ -1,6 +1,6 @@
 """ Contains DB helpers for game actions.
 """
-
+from loguru import logger
 from sqlalchemy import func, and_
 
 from config import CONFIG
@@ -121,6 +121,7 @@ def get_all_actions(game_idx, session=None):
 
 
 @session_wrapper
+@logger.catch
 def update_game_data(game_idx, data, session=None):
     """ Creates a new Game in DB.
     """
