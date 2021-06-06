@@ -3,3 +3,4 @@ invoke==0.22.0
 SQLAlchemy==1.1.15
 PyYAML==3.13
 psycopg2-binary==2.7.5
+loguru==0.5.3
