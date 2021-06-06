@@ -8,6 +8,9 @@ from defs import Action, Result
 class Player(Client):
     def __init__(self, address=CONFIG.SERVER_ADDR, port=CONFIG.SERVER_PORT):
         super().__init__(address, port)
+        super().ACTION_DICT[Action.MAP] = self.on_get_map
+        super().ACTION_DICT[Action.MOVE] = self.on_move
+        super().ACTION_DICT[Action.LOGIN] = self.on_login
 
     def on_get_map(self):
         print('Layer 0 - static objects: ‘idx’, ‘name’, ‘points’, ‘lines’',

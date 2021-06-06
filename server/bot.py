@@ -10,6 +10,9 @@ from Graph import Graph
 class Bot(Client):
     def __init__(self, address=CONFIG.SERVER_ADDR, port=CONFIG.SERVER_PORT):
         super().__init__(address, port)
+        super().ACTION_DICT[Action.MAP] = self.on_get_map
+        super().ACTION_DICT[Action.MOVE] = self.on_move
+        super().ACTION_DICT[Action.LOGIN] = self.on_login
         self.turns = list()
         self.selected_train_idx = 0
         self.map_layer = 0
