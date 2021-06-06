@@ -6,7 +6,7 @@ from functools import wraps
 from socketserver import ThreadingTCPServer, BaseRequestHandler
 
 from invoke import task
-from loguru import logger
+
 
 import errors
 from config import CONFIG
@@ -71,7 +71,7 @@ class GameServerRequestHandler(BaseRequestHandler):
                 game_db.add_action(self.game_idx, Action.LOGOUT, player_idx=self.player.idx)
         self.HANDLERS.pop(id(self))
 
-    @logger.catch
+
     def data_received(self, data):
         if self.data:
             data = self.data + data

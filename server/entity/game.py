@@ -17,6 +17,7 @@ from entity.point import Point
 from entity.post import PostType, Post
 from entity.train import Train
 from logger import log
+from loguru import logger
 
 
 class GameState(IntEnum):
@@ -75,6 +76,7 @@ class Game(Thread):
         return self.state == GameState.FINISHED
 
     @staticmethod
+    @logger.catch
     def get(name, **kwargs):
         """ Returns instance of class Game.
         """
