@@ -13,10 +13,10 @@ class Player(Client):
         super().ACTION_DICT[Action.LOGIN] = Player.on_login
 
     def on_get_map(self):
-        print('Layer 0 - static objects: ‘idx’, ‘name’, ‘points’, ‘lines’',
-              'Layer 1 - dynamic objects: ‘idx’, ‘posts’, ‘trains’, ‘ratings’',
-              'Layer 10 - coordinates of points: ‘idx’, ‘size’, ‘coordinates’', sep='\n')
-        print('Select layer: ')
+        Client.output('Layer 0 - static objects: ‘idx’, ‘name’, ‘points’, ‘lines’\n' +
+                      'Layer 1 - dynamic objects: ‘idx’, ‘posts’, ‘trains’, ‘ratings’\n' +
+                      'Layer 10 - coordinates of points: ‘idx’, ‘size’, ‘coordinates’\n', CONFIG.DEFAULT_OUTPUT_FUNCTION, sep='\n')
+        Client.output('Select layer: ', CONFIG.DEFAULT_OUTPUT_FUNCTION)
         layer = input()
         if layer in ['0', '1', '10']:
             return {'layer': int(layer)}
@@ -24,17 +24,17 @@ class Player(Client):
             raise ValueError('No option for {} layer'.format(layer))
 
     def on_move(self):
-        print('Choose line idx: ')
+        Client.output('Choose line idx: ', CONFIG.DEFAULT_OUTPUT_FUNCTION)
         line_idx = int(input())
         direction = {'pos': 1, 'neg': -1, 'stop': 0}
-        print('Choose direction (enable options {})'.format(list(direction)))
+        Client.output('Choose direction (enable options {})'.format(list(direction)), CONFIG.DEFAULT_OUTPUT_FUNCTION)
         speed = direction[input()]
-        print('Choose train_idx: ')
+        Client.output('Choose train_idx: ', CONFIG.DEFAULT_OUTPUT_FUNCTION)
         train_idx = int(input())
         return {'line_idx': line_idx, 'speed': speed, 'train_idx': train_idx}
 
     def on_login(self):
-        print('Write your name: ', end='')
+        Client.output('Write your name: ', CONFIG.DEFAULT_OUTPUT_FUNCTION, end='')
         message = {'name': input()}
 
         not_required_options = (
@@ -47,9 +47,9 @@ class Player(Client):
         )
 
         for option, description in not_required_options:
-            print('{} - {}'.format(option, description))
-            print('Press enter for default value...')
-            print(option.capitalize())
+            Client.output('{} - {}'.format(option, description), CONFIG.DEFAULT_OUTPUT_FUNCTION)
+            Client.output('Press enter for default value...', CONFIG.DEFAULT_OUTPUT_FUNCTION)
+            Client.output(option.capitalize(), CONFIG.DEFAULT_OUTPUT_FUNCTION)
             value = input()
             if value:
                 message[option] = int(value) if option.startswith('num') else value
@@ -58,15 +58,14 @@ class Player(Client):
 
 
 def main():
-    # server_address = CONFIG.SERVER_ADDR, CONFIG.SERVER_PORT
     player = Player()
     try:
         player.run_server()
     except Exception as e:
-        print(e)
+        CONFIG.DEFAULT_OUTPUT_FUNCTION(e)
 
 
 if __name__ == '__main__':
-    print('Starting server...')
+    CONFIG.DEFAULT_OUTPUT_FUNCTION('Starting server...')
     main()
-    print('End server...')
+    CONFIG.DEFAULT_OUTPUT_FUNCTION('End server...')

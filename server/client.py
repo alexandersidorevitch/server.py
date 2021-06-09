@@ -8,10 +8,11 @@ from defs import Result, Action
 
 
 class Client:
+    MAP_LAYERS = {0, 1, 10}
+
     def __init__(self, address=CONFIG.SERVER_ADDR, port=CONFIG.SERVER_PORT):
         self.server_address = address, port
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.is_login = False
 
     def on_turn(self):
         return None
@@ -22,37 +23,34 @@ class Client:
     def on_player(self):
         return None
 
-    def on_get_map(self):
-        # To override
-        return None
-
-    def on_move(self):
-        # To override
-        return None
-
-    def on_login(self):
-        # To override
-        self.is_login = True
-        return None
-
     def on_logout(self):
         self.is_login = False
         return None
+
+    def on_get_map(self):
+        # To override
+        raise NotImplementedError('Needs to redefine the method in the child class')
+
+    def on_move(self):
+        # To override
+        raise NotImplementedError('Needs to redefine the method in the child class')
+
+    def on_login(self):
+        # To override
+        raise NotImplementedError('Needs to redefine the method in the child class')
 
     def run_server(self):
         try:
             self.server.connect(self.server_address)
             shutdown = False
             while not shutdown:
-                if self.is_login:
-                    print('{}. Action.LOGOUT'.format(Action.LOGOUT))
-                    print('{}. Action.MOVE'.format(Action.MOVE))
-                    print('{}. Action.TURN'.format(Action.TURN))
-                    print('{}. Action.PLAYER'.format(Action.PLAYER))
-                    print('{}. Action.GAMES'.format(Action.GAMES))
-                    print('{}. Action.MAP'.format(Action.MAP))
-                else:
-                    print('{}. Action.LOGIN'.format(Action.LOGIN))
+                Client.output('{}. Action.LOGIN'.format(Action.LOGIN), CONFIG.DEFAULT_OUTPUT_FUNCTION)
+                Client.output('{}. Action.LOGOUT'.format(Action.LOGOUT), CONFIG.DEFAULT_OUTPUT_FUNCTION)
+                Client.output('{}. Action.MOVE'.format(Action.MOVE), CONFIG.DEFAULT_OUTPUT_FUNCTION)
+                Client.output('{}. Action.TURN'.format(Action.TURN), CONFIG.DEFAULT_OUTPUT_FUNCTION)
+                Client.output('{}. Action.PLAYER'.format(Action.PLAYER), CONFIG.DEFAULT_OUTPUT_FUNCTION)
+                Client.output('{}. Action.GAMES'.format(Action.GAMES), CONFIG.DEFAULT_OUTPUT_FUNCTION)
+                Client.output('{}. Action.MAP'.format(Action.MAP), CONFIG.DEFAULT_OUTPUT_FUNCTION)
 
                 selected_action = None
                 try:
@@ -61,32 +59,32 @@ class Client:
                     method = self.ACTION_DICT[selected_action]
                     message = method(self)
                     converted_message = self.convert_message(selected_action, message)
-                    pprint(converted_message)
+                    Client.output(converted_message, pprint)
                     self.send_message(converted_message)
 
                     result, message, data = self.receive_message()
 
                     if result == Result.OKEY:
-                        print('Done')
-                        print(message)
+                        Client.output('Done', CONFIG.DEFAULT_OUTPUT_FUNCTION)
                     else:
-                        print('Error {}'.format(result))
+                        Client.output('Error {}'.format(result), CONFIG.DEFAULT_OUTPUT_FUNCTION)
 
-                    pprint('Received message: {}'.format(message))
+                    Client.output('Received message: ', CONFIG.DEFAULT_OUTPUT_FUNCTION, end='')
+                    Client.output(message, pprint)
                 except ValueError as err:
-                    print(err)
+                    Client.output(err, CONFIG.DEFAULT_OUTPUT_FUNCTION)
                 except KeyError as err:
-                    print('No functions for {} yet'.format(selected_action))
+                    Client.output('No functions for {} yet'.format(selected_action), CONFIG.DEFAULT_OUTPUT_FUNCTION)
                 except KeyboardInterrupt as err:
                     shutdown = True
-                    print('End the code...')
+                    Client.output('End the code...', CONFIG.DEFAULT_OUTPUT_FUNCTION)
         except json.decoder.JSONDecodeError as err:
-            print(err)
+            Client.output(err, CONFIG.DEFAULT_OUTPUT_FUNCTION)
 
         except Exception as err:
-            print(err)
+            Client.output(err, CONFIG.DEFAULT_OUTPUT_FUNCTION)
         finally:
-            print('Close the connection...')
+            Client.output('Close the connection...', CONFIG.DEFAULT_OUTPUT_FUNCTION)
             self.server.close()
 
     def receive_message(self):
@@ -115,6 +113,10 @@ class Client:
 
     def send_message(self, message: bytes) -> None:
         self.server.sendto(message, self.server_address)
+
+    @staticmethod
+    def output(message, output_function, **kwargs):
+        output_function(message, **kwargs)
 
     ACTION_DICT = {
         Action.MAP: on_get_map,
