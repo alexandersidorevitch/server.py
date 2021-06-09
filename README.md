@@ -45,3 +45,15 @@ Create files with environment variables for DB ('pg.env') and server ('server.en
 Run server:
 
     $ docker-compose up -d
+
+### Run player-client 
+
+Run client:
+    
+    $ invoke run-client
+
+### Run bot-client 
+
+Run client:
+    
+    $ invoke run-client -r bot

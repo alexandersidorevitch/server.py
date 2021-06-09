@@ -8,15 +8,16 @@ from db.models import Base
 from db.session import session_ctx, Session
 from defs import Action
 from logger import log
+
 from player import Player
 from bot import Bot
 from client import Client
 
-__all__ = ['activate_map', 'generate_map', 'generate_all_maps', 'db_init', 'generate_replay', 'start_client']
+__all__ = ['activate_map', 'generate_map', 'generate_all_maps', 'db_init', 'generate_replay', 'run_client']
 
 
 @task
-def start_client(_, role='player'):
+def run_client(_, role='player'):
     """ Start game client in console
     """
     clients = {
