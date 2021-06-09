@@ -128,7 +128,7 @@ def update_game_data(game_idx, data, session=None):
     game = session.query(
         Game
     ).with_for_update(
-        of=Game, key_share=True
+        of=Game
     ).get(game_idx)
     if game.data:
         game.data.update(data)
