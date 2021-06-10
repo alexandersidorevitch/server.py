@@ -13,6 +13,15 @@ class Client:
     def __init__(self, address=CONFIG.SERVER_ADDR, port=CONFIG.SERVER_PORT):
         self.server_address = address, port
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.ACTION_DICT = {
+            Action.MAP: self.on_get_map,
+            Action.MOVE: self.on_move,
+            Action.LOGOUT: self.on_logout,
+            Action.LOGIN: self.on_login,
+            Action.TURN: self.on_turn,
+            Action.GAMES: self.on_game,
+            Action.PLAYER: self.on_player,
+        }
 
     def on_turn(self):
         return None
@@ -24,7 +33,6 @@ class Client:
         return None
 
     def on_logout(self):
-        self.is_login = False
         return None
 
     def on_get_map(self):
@@ -118,12 +126,4 @@ class Client:
     def output(message, output_function, **kwargs):
         output_function(message, **kwargs)
 
-    ACTION_DICT = {
-        Action.MAP: on_get_map,
-        Action.MOVE: on_move,
-        Action.LOGOUT: on_logout,
-        Action.LOGIN: on_login,
-        Action.TURN: on_turn,
-        Action.GAMES: on_game,
-        Action.PLAYER: on_player,
-    }
+
