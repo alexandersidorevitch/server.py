@@ -37,6 +37,8 @@ class Bot(Client):
             filter(lambda train: train.get('idx') == train_idx,
                    message.get('trains'))
         )
+        if not train_kwargs:
+            raise ValueError('No any train with idx {}'.format(train_idx))
         print('2')
         train.set_attributes(**train_kwargs)
         print('3')
