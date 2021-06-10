@@ -43,7 +43,9 @@ class Bot(Client):
         train.set_attributes(**train_kwargs)
         print('3')
         result, message, data = self.get_map(layer=0)
+        print('6')
         line = Line(train.line_idx)
+        print('7')
         line_kwargs = next(
             filter(lambda line: line.get('idx') == train.line_idx,
                    message.get('lines'))
