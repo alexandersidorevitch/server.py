@@ -95,8 +95,10 @@ class Client:
             self.server.close()
 
     def receive_message(self):
-        data = self.server.recv(CONFIG.RECEIVE_CHUNK_SIZE)
-        print(data)
+        data = b''
+        while len(data) < CONFIG.RESULT_HEADER + CONFIG.MSGLEN_HEADER:
+            data += self.server.recv(CONFIG.RECEIVE_CHUNK_SIZE)
+
         result = Result(int.from_bytes(data[0:CONFIG.ACTION_HEADER], byteorder='little'))
 
         data = data[CONFIG.ACTION_HEADER:]
