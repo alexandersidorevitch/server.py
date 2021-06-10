@@ -12,6 +12,7 @@ class Client:
     def __init__(self, address=CONFIG.SERVER_ADDR, port=CONFIG.SERVER_PORT):
         self.server_address = address, port
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.idx = ''
         self.ACTION_DICT = {
             Action.MAP: self.on_get_map,
             Action.MOVE: self.on_move,
@@ -63,6 +64,7 @@ class Client:
                 try:
                     selected_action = Action(int(input()))
 
+
                     method = self.ACTION_DICT[selected_action]
                     message = method()
                     converted_message = self.convert_message(selected_action, message)
@@ -75,6 +77,9 @@ class Client:
                         Client.output('Done', CONFIG.DEFAULT_OUTPUT_FUNCTION)
                     else:
                         Client.output('Error {}'.format(result), CONFIG.DEFAULT_OUTPUT_FUNCTION)
+
+                    if selected_action == Action.LOGIN:
+                        self.idx = message.get('idx')
 
                     Client.output('Received message: ', CONFIG.DEFAULT_OUTPUT_FUNCTION)
                     Client.output(message, CONFIG.DEFAULT_OUTPUT_FUNCTION)

@@ -39,8 +39,13 @@ class Bot(Client):
         )
         if not train_kwargs:
             raise ValueError('No any train with idx {}'.format(train_idx))
+
         print('2')
         train.set_attributes(**train_kwargs)
+
+        if self.idx != train.player_idx:
+            raise ValueError('This is not your train!!!')
+
         print('3')
         result, message, data = self.get_map(layer=0)
         print('6')
