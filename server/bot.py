@@ -47,6 +47,7 @@ class Bot(Client):
         line = Line(train.line_idx)
         print(line)
         print('7')
+        print(result, message, data)
         line_kwargs = next(
             filter(lambda _line: _line.get('idx') == train.line_idx,
                    message.get('lines'))
