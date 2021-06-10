@@ -77,7 +77,7 @@ class Client:
                     else:
                         Client.output('Error {}'.format(result), CONFIG.DEFAULT_OUTPUT_FUNCTION)
 
-                    Client.output('Received message: ', CONFIG.DEFAULT_OUTPUT_FUNCTION, end='')
+                    Client.output('Received message: ', CONFIG.DEFAULT_OUTPUT_FUNCTION)
                     Client.output(message, pprint)
                 except ValueError as err:
                     Client.output(err, CONFIG.DEFAULT_OUTPUT_FUNCTION)
