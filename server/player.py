@@ -10,10 +10,11 @@ class Player(Client):
         super().__init__(address, port)
 
     def on_get_map(self):
-        Client.output('Layer 0 - static objects: ‘idx’, ‘name’, ‘points’, ‘lines’\n' +
-                      'Layer 1 - dynamic objects: ‘idx’, ‘posts’, ‘trains’, ‘ratings’\n' +
-                      'Layer 10 - coordinates of points: ‘idx’, ‘size’, ‘coordinates’\n',
-                      CONFIG.DEFAULT_OUTPUT_FUNCTION)
+        Client.output(
+            'Layer 0 - static objects: ‘idx’, ‘name’, ‘points’, ‘lines’\n'
+            'Layer 1 - dynamic objects: ‘idx’, ‘posts’, ‘trains’, ‘ratings’\n'
+            'Layer 10 - coordinates of points: ‘idx’, ‘size’, ‘coordinates’\n',
+            CONFIG.DEFAULT_OUTPUT_FUNCTION)
         Client.output('Select layer: ', CONFIG.DEFAULT_OUTPUT_FUNCTION, end='')
         layer = int(input())
         if layer not in self.MAP_LAYERS:
