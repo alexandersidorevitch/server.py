@@ -8,27 +8,26 @@ from defs import Action, Result
 class Player(Client):
     def __init__(self, address=CONFIG.SERVER_ADDR, port=CONFIG.SERVER_PORT):
         super().__init__(address, port)
-        super().ACTION_DICT[Action.MAP] = Player.on_get_map
-        super().ACTION_DICT[Action.MOVE] = Player.on_move
-        super().ACTION_DICT[Action.LOGIN] = Player.on_login
 
     def on_get_map(self):
         Client.output('Layer 0 - static objects: ‘idx’, ‘name’, ‘points’, ‘lines’\n' +
                       'Layer 1 - dynamic objects: ‘idx’, ‘posts’, ‘trains’, ‘ratings’\n' +
-                      'Layer 10 - coordinates of points: ‘idx’, ‘size’, ‘coordinates’\n', CONFIG.DEFAULT_OUTPUT_FUNCTION, sep='\n')
-        Client.output('Select layer: ', CONFIG.DEFAULT_OUTPUT_FUNCTION)
+                      'Layer 10 - coordinates of points: ‘idx’, ‘size’, ‘coordinates’\n',
+                      CONFIG.DEFAULT_OUTPUT_FUNCTION)
+        Client.output('Select layer: ', CONFIG.DEFAULT_OUTPUT_FUNCTION, end='')
         layer = input()
-        if layer in ['0', '1', '10']:
-            return {'layer': int(layer)}
-        else:
+        if layer not in self.MAP_LAYERS:
             raise ValueError('No option for {} layer'.format(layer))
+        return {'layer': int(layer)}
 
     def on_move(self):
         Client.output('Choose line idx: ', CONFIG.DEFAULT_OUTPUT_FUNCTION)
         line_idx = int(input())
+
         direction = {'pos': 1, 'neg': -1, 'stop': 0}
         Client.output('Choose direction (enable options {})'.format(list(direction)), CONFIG.DEFAULT_OUTPUT_FUNCTION)
         speed = direction[input()]
+
         Client.output('Choose train_idx: ', CONFIG.DEFAULT_OUTPUT_FUNCTION)
         train_idx = int(input())
         return {'line_idx': line_idx, 'speed': speed, 'train_idx': train_idx}

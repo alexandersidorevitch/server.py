@@ -12,44 +12,30 @@ from entity.line import Line
 class Bot(Client):
     def __init__(self, address=CONFIG.SERVER_ADDR, port=CONFIG.SERVER_PORT):
         super().__init__(address, port)
-        super().ACTION_DICT[Action.MAP] = Bot.on_get_map
-        super().ACTION_DICT[Action.MOVE] = Bot.on_move
-        super().ACTION_DICT[Action.LOGIN] = Bot.on_login
-        self.turns = list()
-        self.selected_train_idx = 0
         self.map_layer = 0
-        self.maps_end_points = {'map04': 10}
-        self.current_train_point_idx = 0
+        self.train_paths = dict()
 
-    def generate_moves(self) -> None:
-        self.map_layer = 0
-
-        message = self.on_player()
-        converted_message = self.convert_message(Action.PLAYER, message)
-        self.send_message(converted_message)
-        result, message, data = self.receive_message()
-        start_train_point_idx = message.get('home').get('idx')
+    def generate_moves(self, train_idx, start_point_idx, end_point_idx) -> None:
 
         result, message, data = self.get_map(0)
 
-        g = graph.Graph(result)
-        self.turns = g.dijkstra(start_train_point_idx, self.maps_end_points[message.get('name', 'map04')]).get('path')
+        g = graph.Graph(message)
+        self.train_paths[train_idx] = g.dijkstra(start_point_idx, end_point_idx).get('path')
 
     def on_get_map(self) -> dict:
-        if self.map_layer in self.MAP_LAYERS:
-            return {'layer': self.map_layer}
-        else:
+        if self.map_layer not in self.MAP_LAYERS:
             raise ValueError('No option for {} layer'.format(self.map_layer))
+        return {'layer': self.map_layer}
 
     def on_move(self) -> dict:
-        Client.output('Choose train_idx: ', CONFIG.DEFAULT_OUTPUT_FUNCTION)
+        Client.output('Input train_idx: ', CONFIG.DEFAULT_OUTPUT_FUNCTION)
         train_idx = int(input())
 
         result, message, data = self.get_map(layer=1)
         train = Train(train_idx)
         train_kwargs = next(
             filter(lambda train: train.get('idx') == train_idx,
-                   message.get('trains', []))
+                   message.get('trains'))
         )
         train.set_attributes(**train_kwargs)
 
@@ -57,18 +43,22 @@ class Bot(Client):
         line = Line(train.line_idx)
         line_kwargs = next(
             filter(lambda line: line.get('idx') == train.line_idx,
-                   message.get('lines', []))
+                   message.get('lines'))
         )
         line.set_attributes(**line_kwargs)
 
-        if not self.turns or self.selected_train_idx != train_idx:
-            self.generate_moves()
+        if train.speed != 0:
+            raise ValueError('Train is moving')
 
-        if train.position == line.length:
-            self.turns.remove(0)
-            return {'line_idx': line.idx, 'speed': 0, 'train_idx': train_idx}
+        if train.idx not in self.train_paths:
+            Client.output('Input end point_idx: ', CONFIG.DEFAULT_OUTPUT_FUNCTION, end='')
+            end_point_idx = int(input())
+            self.generate_moves(train.idx, line.points[train.position != 0], end_point_idx)
 
-        turn = self.turns[0]
+        turn = self.train_paths[train.idx].pop(0)
+        if not self.train_paths[train.idx]:
+            del self.train_paths[train.idx]
+
         return {'line_idx': turn.get('line_idx'), 'speed': turn.get('speed'), 'train_idx': train_idx}
 
     def on_login(self):
