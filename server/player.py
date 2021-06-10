@@ -15,7 +15,7 @@ class Player(Client):
                       'Layer 10 - coordinates of points: ‘idx’, ‘size’, ‘coordinates’\n',
                       CONFIG.DEFAULT_OUTPUT_FUNCTION)
         Client.output('Select layer: ', CONFIG.DEFAULT_OUTPUT_FUNCTION, end='')
-        layer = input()
+        layer = int(input())
         if layer not in self.MAP_LAYERS:
             raise ValueError('No option for {} layer'.format(layer))
         return {'layer': int(layer)}
