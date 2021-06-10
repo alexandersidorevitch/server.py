@@ -1,7 +1,6 @@
 import json
 
 import socket, threading, time
-from pprint import pprint
 
 from config import CONFIG
 from defs import Result, Action
@@ -67,7 +66,7 @@ class Client:
                     method = self.ACTION_DICT[selected_action]
                     message = method()
                     converted_message = self.convert_message(selected_action, message)
-                    Client.output(converted_message, pprint)
+                    Client.output(converted_message, CONFIG.DEFAULT_OUTPUT_FUNCTION)
                     self.send_message(converted_message)
 
                     result, message, data = self.receive_message()
@@ -78,7 +77,7 @@ class Client:
                         Client.output('Error {}'.format(result), CONFIG.DEFAULT_OUTPUT_FUNCTION)
 
                     Client.output('Received message: ', CONFIG.DEFAULT_OUTPUT_FUNCTION)
-                    Client.output(message, pprint)
+                    Client.output(message, CONFIG.DEFAULT_OUTPUT_FUNCTION)
                 except ValueError as err:
                     Client.output(err, CONFIG.DEFAULT_OUTPUT_FUNCTION)
                 except KeyError as err:
@@ -125,5 +124,3 @@ class Client:
     @staticmethod
     def output(message, output_function, **kwargs):
         output_function(message, **kwargs)
-
-
