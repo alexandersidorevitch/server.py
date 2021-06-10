@@ -19,7 +19,7 @@ class Player(Client):
         layer = int(input())
         if layer not in self.MAP_LAYERS:
             raise ValueError('No option for {} layer'.format(layer))
-        return {'layer': int(layer)}
+        return {'layer': layer}
 
     def on_move(self):
         Client.output('Choose line idx: ', CONFIG.DEFAULT_OUTPUT_FUNCTION)
