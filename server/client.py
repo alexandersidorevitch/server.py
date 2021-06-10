@@ -65,7 +65,7 @@ class Client:
                     selected_action = Action(int(input()))
 
                     method = self.ACTION_DICT[selected_action]
-                    message = method(self)
+                    message = method()
                     converted_message = self.convert_message(selected_action, message)
                     Client.output(converted_message, pprint)
                     self.send_message(converted_message)
