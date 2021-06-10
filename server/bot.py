@@ -34,7 +34,7 @@ class Bot(Client):
         result, message, data = self.get_map(layer=1)
         train = Train(train_idx)
         train_kwargs = next(
-            filter(lambda train: train.get('idx') == train_idx,
+            filter(lambda _train: _train.get('idx') == train_idx,
                    message.get('trains'))
         )
         if not train_kwargs:
@@ -45,9 +45,10 @@ class Bot(Client):
         result, message, data = self.get_map(layer=0)
         print('6')
         line = Line(train.line_idx)
+        print(line)
         print('7')
         line_kwargs = next(
-            filter(lambda line: line.get('idx') == train.line_idx,
+            filter(lambda _line: _line.get('idx') == train.line_idx,
                    message.get('lines'))
         )
         print('4')
