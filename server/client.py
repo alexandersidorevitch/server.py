@@ -24,30 +24,46 @@ class Client:
         }
 
     def on_turn(self):
+        """ Triggered when the turn event is called
+        """
         return None
 
     def on_game(self):
+        """ Triggered when the game event is called
+        """
         return None
 
     def on_player(self):
+        """ Triggered when the player event is called
+        """
         return None
 
     def on_logout(self):
+        """ Triggered when the logout event is called
+        """
         return None
 
     def on_get_map(self):
+        """ Triggered when the map event is called
+        """
         # To override
         raise NotImplementedError('Needs to redefine the method in the child class')
 
     def on_move(self):
+        """ Triggered when the move event is called
+        """
         # To override
         raise NotImplementedError('Needs to redefine the method in the child class')
 
     def on_login(self):
+        """ Triggered when the login event is called
+        """
         # To override
         raise NotImplementedError('Needs to redefine the method in the child class')
 
     def run_server(self):
+        """ Starts the server
+        """
         try:
             self.server.connect(self.server_address)
             shutdown = False
@@ -99,6 +115,8 @@ class Client:
             self.server.close()
 
     def receive_message(self):
+        """ Accepts a message from a connected server
+        """
         data = b''
         while len(data) < CONFIG.RESULT_HEADER + CONFIG.MSGLEN_HEADER:
             data += self.server.recv(CONFIG.RECEIVE_CHUNK_SIZE)
@@ -115,6 +133,8 @@ class Client:
 
     @staticmethod
     def convert_message(action, message=None):
+        """ Converts the message to the desired format
+        """
         converted_message = action.to_bytes(length=CONFIG.ACTION_HEADER, byteorder='little')
         if message is None:
             return converted_message + int.to_bytes(0, length=CONFIG.MSGLEN_HEADER,
@@ -126,14 +146,20 @@ class Client:
             'utf-8')
 
     def send_message(self, message: bytes) -> None:
+        """ Sends a message to the connected server
+        """
         self.server.sendto(message, self.server_address)
 
     @staticmethod
     def output(message, output_function, **kwargs):
+        """ Outputs a message using an auxiliary function
+        """
         output_function(message, **kwargs)
 
     @staticmethod
     def get_pretty_string(message):
+        """ Returns pretty performance of message
+        """
         from pprint import pprint
         from io import StringIO
         f = StringIO()

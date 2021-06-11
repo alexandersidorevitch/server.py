@@ -18,7 +18,7 @@ __all__ = ['activate_map', 'generate_map', 'generate_all_maps', 'db_init', 'gene
 
 @task
 def run_client(_, role='player'):
-    """ Start game client in console
+    """ Run game client in console
     """
     clients = {
         'player': Player,

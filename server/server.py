@@ -7,7 +7,6 @@ from socketserver import ThreadingTCPServer, BaseRequestHandler
 
 from invoke import task
 
-
 import errors
 from config import CONFIG
 from db import game_db
@@ -70,7 +69,6 @@ class GameServerRequestHandler(BaseRequestHandler):
             if not self.observer:
                 game_db.add_action(self.game_idx, Action.LOGOUT, player_idx=self.player.idx)
         self.HANDLERS.pop(id(self))
-
 
     def data_received(self, data):
         if self.data:

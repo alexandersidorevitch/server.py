@@ -16,7 +16,8 @@ class Bot(Client):
         self.train_paths = dict()
 
     def generate_moves(self, train_idx, start_point_idx, end_point_idx) -> None:
-
+        """ Generates moves for the selected train
+        """
         result, message, data = self.get_map(0)
 
         g = graph.Graph(message)
@@ -60,11 +61,11 @@ class Bot(Client):
             end_point_idx = int(input())
             self.generate_moves(train.idx, line.points[train.position != 0], end_point_idx)
 
-        turn = self.train_paths[train.idx].pop(0)
+        move = self.train_paths[train.idx].pop(0)
         if not self.train_paths[train.idx]:
             del self.train_paths[train.idx]
 
-        return {'line_idx': turn.get('line_idx'), 'speed': turn.get('speed'), 'train_idx': train_idx}
+        return {'line_idx': move.get('line_idx'), 'speed': move.get('speed'), 'train_idx': train_idx}
 
     def on_login(self):
         name = choice(('Nazar', 'Oleg', 'Petr', 'Igor', 'Taras')) + 'Bot'
@@ -73,6 +74,8 @@ class Bot(Client):
         return {'name': name, 'game': input()}
 
     def get_map(self, layer):
+        """ Returns the selected card
+        """
         self.map_layer = layer
         message = self.on_get_map()
         converted_message = self.convert_message(Action.MAP, message)
