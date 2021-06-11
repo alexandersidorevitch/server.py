@@ -64,7 +64,6 @@ class Client:
                 try:
                     selected_action = Action(int(input()))
 
-
                     method = self.ACTION_DICT[selected_action]
                     message = method()
                     converted_message = self.convert_message(selected_action, message)
@@ -82,7 +81,7 @@ class Client:
                         self.idx = message.get('idx')
 
                     Client.output('Received message: ', CONFIG.DEFAULT_OUTPUT_FUNCTION)
-                    Client.output(message, CONFIG.DEFAULT_OUTPUT_FUNCTION)
+                    Client.output(Client.get_pretty_string(message), CONFIG.DEFAULT_OUTPUT_FUNCTION)
                 except ValueError as err:
                     Client.output(err, CONFIG.DEFAULT_OUTPUT_FUNCTION)
                 except KeyError as err:
@@ -132,3 +131,11 @@ class Client:
     @staticmethod
     def output(message, output_function, **kwargs):
         output_function(message, **kwargs)
+
+    @staticmethod
+    def get_pretty_string(message):
+        from pprint import pprint
+        from io import StringIO
+        f = StringIO()
+        pprint(message, f)
+        return f.getvalue()
