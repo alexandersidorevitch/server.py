@@ -1,4 +1,3 @@
-from pprint import pprint
 from random import choice
 
 from client import Client
@@ -74,7 +73,7 @@ class Bot(Client):
         return {'name': name, 'game': input()}
 
     def get_map(self, layer):
-        """ Returns the selected card
+        """ Returns the selected map
         """
         self.map_layer = layer
         message = self.on_get_map()

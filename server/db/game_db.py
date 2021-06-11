@@ -1,6 +1,5 @@
 """ Contains DB helpers for game actions.
 """
-from loguru import logger
 from sqlalchemy import func, and_
 
 from config import CONFIG
