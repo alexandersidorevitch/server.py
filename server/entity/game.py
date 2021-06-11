@@ -76,7 +76,6 @@ class Game(Thread):
         return self.state == GameState.FINISHED
 
     @staticmethod
-    @logger.catch
     def get(name, **kwargs):
         """ Returns instance of class Game.
         """
