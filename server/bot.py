@@ -30,7 +30,6 @@ class Bot(Client):
     def on_move(self) -> dict:
         Client.output('Input train_idx: ', CONFIG.DEFAULT_OUTPUT_FUNCTION)
         train_idx = int(input())
-        print('1')
         result, message, data = self.get_map(layer=1)
         train = Train(train_idx)
         train_kwargs = next(
@@ -40,31 +39,23 @@ class Bot(Client):
         if not train_kwargs:
             raise ValueError('No any train with idx {}'.format(train_idx))
 
-        print('2')
         train.set_attributes(**train_kwargs)
 
         if self.idx != train.player_idx:
             raise ValueError('This is not your train!!!')
 
-        print('3')
         result, message, data = self.get_map(layer=0)
-        print('6')
         line = Line(train.line_idx)
-        print(line)
-        print('7')
-        print(self.get_map(layer=0))
         line_kwargs = next(
             filter(lambda _line: _line.get('idx') == train.line_idx,
                    message.get('lines'))
         )
-        print('4')
         line.set_attributes(**line_kwargs)
 
         if train.speed != 0:
             raise ValueError('Train is moving')
 
         if train.idx not in self.train_paths:
-            print('5')
             Client.output('Input end point_idx: ', CONFIG.DEFAULT_OUTPUT_FUNCTION, end='')
             end_point_idx = int(input())
             self.generate_moves(train.idx, line.points[train.position != 0], end_point_idx)
