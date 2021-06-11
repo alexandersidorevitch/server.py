@@ -1,5 +1,7 @@
 import heapq
-from pprint import pprint
+from collections import namedtuple
+
+Connection = namedtuple('Connection', ('weight', 'to_point', 'line_idx'))
 
 
 class Graph:
@@ -39,8 +41,10 @@ class Graph:
         while parents[current] is not None:
             parent = parents[current]
             path.insert(0, {
-                'line_idx': next(filter(lambda connection: connection[1] == parent,
-                                        self.points[current]))[2],
+                'line_idx': next(
+                    filter(lambda connection: connection.to_point == parent,
+                           self.points[current])
+                ).line_idx,
                 'speed': 1 if current > parent else -1}
                         )
             current = parents[current]
@@ -53,8 +57,8 @@ class Graph:
                           data.get('lines', tuple()))
 
         for connection in connections:
-            two_points, length, line_idx = connection
+            two_points, weight, line_idx = connection
             from_point, to_point = two_points
-            points[from_point].append((length, to_point, line_idx))
-            points[to_point].append((length, from_point, line_idx))
+            points[from_point].append(Connection(weight, to_point, line_idx))
+            points[to_point].append(Connection(weight, from_point, line_idx))
         return points
