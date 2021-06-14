@@ -11,24 +11,31 @@ from logger import log
 
 from player import Player
 from bot import Bot
-from client import Client
 
-__all__ = ['activate_map', 'generate_map', 'generate_all_maps', 'db_init', 'generate_replay', 'run_client']
+
+__all__ = ['activate_map', 'generate_map', 'generate_all_maps', 'db_init', 'generate_replay', 'run_player', 'run_bot']
 
 
 @task
-def run_client(_, role='player'):
-    """ Run game client in console
+def run_player(_, log_level='INFO'):
+    """ Run player client in console
     """
-    clients = {
-        'player': Player,
-        'bot': Bot
-    }
+    client = Player(log_level=log_level)
     try:
-        client = clients[role]()
         client.run_server()
     except Exception as e:
-        Client.output(e, CONFIG.DEFAULT_OUTPUT_FUNCTION)
+        client.logger.error(e, CONFIG.DEFAULT_OUTPUT_FUNCTION)
+
+
+@task
+def run_bot(_, log_level='INFO'):
+    """ Run player client in console
+    """
+    client = Bot(log_level=log_level)
+    try:
+        client.run_server()
+    except Exception as e:
+        client.logger.error(e, CONFIG.DEFAULT_OUTPUT_FUNCTION)
 
 
 @task

@@ -50,10 +50,10 @@ Run server:
 
 Run client:
     
-    $ invoke run-client
+    $ invoke run-player -l DEBUG
 
 ### Run bot-client 
 
 Run client:
     
-    $ invoke run-client -r bot
+    $ invoke run-bot -l DEBUG
