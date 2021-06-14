@@ -6,8 +6,8 @@ from defs import Action, Result
 
 
 class Player(Client):
-    def __init__(self, address=CONFIG.SERVER_ADDR, port=CONFIG.SERVER_PORT):
-        super().__init__(address, port)
+    def __init__(self, address=CONFIG.SERVER_ADDR, port=CONFIG.SERVER_PORT, log_level='INFO'):
+        super().__init__(address=address, port=port, level=log_level)
 
     def on_get_map(self):
         self.logger.info(

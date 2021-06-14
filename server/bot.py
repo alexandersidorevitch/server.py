@@ -10,7 +10,7 @@ from entity.line import Line
 
 class Bot(Client):
     def __init__(self, address=CONFIG.SERVER_ADDR, port=CONFIG.SERVER_PORT, log_level='INFO'):
-        super().__init__(address, port, log_level)
+        super().__init__(address=address, port=port, level=log_level)
         self.map_layer = 0
         self.train_paths = dict()
 
