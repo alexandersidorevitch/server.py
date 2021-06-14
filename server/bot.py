@@ -69,7 +69,7 @@ class Bot(Client):
     def on_login(self):
         name = choice(('Nazar', 'Oleg', 'Petr', 'Igor', 'Taras')) + 'Bot'
         self.logger.info('Bot name: {}'.format(name))
-        self.logger.info('Input game name: ', end='')
+        self.logger.info('Input game name: ')
         return {'name': name, 'game': input()}
 
     def get_map(self, layer):
