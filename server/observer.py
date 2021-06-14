@@ -16,4 +16,4 @@ class Observer(Player):
 
     def on_game(self):
         self.logger.info('Input game_idx:')
-        return {'game_idx': int(input())}
+        return {'idx': int(input())}
