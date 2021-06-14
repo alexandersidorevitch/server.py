@@ -70,12 +70,12 @@ class Client:
             self.server.connect(self.server_address)
             shutdown = False
             while not shutdown:
-                self.logger.info('{}. Action.LOGIN'
-                                 '{}. Action.LOGOUT'
-                                 '{}. Action.MOVE'
-                                 '{}. Action.TURN'
-                                 '{}. Action.PLAYER'
-                                 '{}. Action.GAMES'
+                self.logger.info('{}. Action.LOGIN\n'
+                                 '{}. Action.LOGOUT\n'
+                                 '{}. Action.MOVE\n'
+                                 '{}. Action.TURN\n'
+                                 '{}. Action.PLAYER\n'
+                                 '{}. Action.GAMES\n'
                                  '{}. Action.MAP'.format(Action.LOGIN, Action.LOGOUT, Action.MOVE, Action.TURN,
                                                          Action.PLAYER, Action.GAMES, Action.MAP))
 
