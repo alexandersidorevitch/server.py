@@ -11,7 +11,7 @@ from logger import log
 
 from player import Player
 from bot import Bot
-
+from observer import Observer
 
 __all__ = ['activate_map', 'generate_map', 'generate_all_maps', 'db_init', 'generate_replay', 'run_player', 'run_bot']
 
@@ -23,8 +23,8 @@ def run_player(_, log_level='INFO'):
     client = Player(log_level=log_level)
     try:
         client.run_server()
-    except Exception as e:
-        client.logger.error(e, CONFIG.DEFAULT_OUTPUT_FUNCTION)
+    except Exception as err:
+        client.logger.error(err)
 
 
 @task
@@ -34,8 +34,19 @@ def run_bot(_, log_level='INFO'):
     client = Bot(log_level=log_level)
     try:
         client.run_server()
-    except Exception as e:
-        client.logger.error(e, CONFIG.DEFAULT_OUTPUT_FUNCTION)
+    except Exception as err:
+        client.logger.error(err)
+
+
+@task
+def run_observer(_, log_level='INFO'):
+    """ Run player client in console
+    """
+    client = Observer(log_level=log_level)
+    try:
+        client.run_server()
+    except Exception as err:
+        client.logger.error(err)
 
 
 @task

@@ -70,14 +70,7 @@ class Client:
             self.server.connect(self.server_address)
             shutdown = False
             while not shutdown:
-                self.logger.info('{}. Action.LOGIN\n'
-                                 '{}. Action.LOGOUT\n'
-                                 '{}. Action.MOVE\n'
-                                 '{}. Action.TURN\n'
-                                 '{}. Action.PLAYER\n'
-                                 '{}. Action.GAMES\n'
-                                 '{}. Action.MAP'.format(Action.LOGIN, Action.LOGOUT, Action.MOVE, Action.TURN,
-                                                         Action.PLAYER, Action.GAMES, Action.MAP))
+                self.output_available_options()
 
                 selected_action = None
                 try:
@@ -153,6 +146,16 @@ class Client:
         """ Sends a message to the connected server
         """
         self.server.sendto(message, self.server_address)
+
+    def output_available_options(self):
+        self.logger.info(
+            '\n'.join(
+                map(
+                    lambda option: '{}. {}'.format(option, str(option)),
+                    self.ACTION_DICT.keys()
+                )
+            )
+        )
 
     @staticmethod
     def get_pretty_string(message):
