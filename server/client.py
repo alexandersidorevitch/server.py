@@ -21,7 +21,7 @@ class Client:
             Action.LOGOUT: self.on_logout,
             Action.LOGIN: self.on_login,
             Action.TURN: self.on_turn,
-            Action.GAMES: self.on_game,
+            Action.GAMES: self.on_games,
             Action.PLAYER: self.on_player,
         }
 
@@ -30,7 +30,7 @@ class Client:
         """
         return None
 
-    def on_game(self):
+    def on_games(self):
         """ Triggered when the game event is called
         """
         return None
