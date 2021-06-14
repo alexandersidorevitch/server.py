@@ -46,9 +46,10 @@ class Player(Client):
         )
 
         for option, description in not_required_options:
-            self.logger.info('{} - {}'.format(option, description))
-            self.logger.info('Press enter for default value...')
-            self.logger.info(option.capitalize())
+            self.logger.info('{} - {}\n'
+                             'Press enter for default value...\n'
+                             '{}'.format(option, description, option.capitalize()))
+
             value = input()
             if value:
                 message[option] = int(value) if option.startswith('num') else value

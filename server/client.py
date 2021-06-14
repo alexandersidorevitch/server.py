@@ -70,13 +70,14 @@ class Client:
             self.server.connect(self.server_address)
             shutdown = False
             while not shutdown:
-                self.logger.info('{}. Action.LOGIN'.format(Action.LOGIN))
-                self.logger.info('{}. Action.LOGOUT'.format(Action.LOGOUT))
-                self.logger.info('{}. Action.MOVE'.format(Action.MOVE))
-                self.logger.info('{}. Action.TURN'.format(Action.TURN))
-                self.logger.info('{}. Action.PLAYER'.format(Action.PLAYER))
-                self.logger.info('{}. Action.GAMES'.format(Action.GAMES))
-                self.logger.info('{}. Action.MAP'.format(Action.MAP))
+                self.logger.info('{}. Action.LOGIN'
+                                 '{}. Action.LOGOUT'
+                                 '{}. Action.MOVE'
+                                 '{}. Action.TURN'
+                                 '{}. Action.PLAYER'
+                                 '{}. Action.GAMES'
+                                 '{}. Action.MAP'.format(Action.LOGIN, Action.LOGOUT, Action.MOVE, Action.TURN,
+                                                         Action.PLAYER, Action.GAMES, Action.MAP))
 
                 selected_action = None
                 try:
