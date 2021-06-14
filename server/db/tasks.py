@@ -13,7 +13,8 @@ from player import Player
 from bot import Bot
 from observer import Observer
 
-__all__ = ['activate_map', 'generate_map', 'generate_all_maps', 'db_init', 'generate_replay', 'run_player', 'run_bot']
+__all__ = ['activate_map', 'generate_map', 'generate_all_maps', 'db_init', 'generate_replay', 'run_player', 'run_bot',
+           'run_observer']
 
 
 @task
