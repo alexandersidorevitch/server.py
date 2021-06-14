@@ -67,8 +67,6 @@ class BaseConfig(object):
     MAX_EVENT_MESSAGES = 5
     TIME_FORMAT = '%b %d %Y %I:%M:%S.%f'
 
-    DEFAULT_OUTPUT_FUNCTION = print
-
     TOWN_LEVELS = AttrDict({
         1: {
             'population_capacity': 10,

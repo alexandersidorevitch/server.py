@@ -10,31 +10,30 @@ class Player(Client):
         super().__init__(address, port)
 
     def on_get_map(self):
-        Client.output(
+        self.logger.info(
             'Layer 0 - static objects: ‘idx’, ‘name’, ‘points’, ‘lines’\n'
             'Layer 1 - dynamic objects: ‘idx’, ‘posts’, ‘trains’, ‘ratings’\n'
-            'Layer 10 - coordinates of points: ‘idx’, ‘size’, ‘coordinates’\n',
-            CONFIG.DEFAULT_OUTPUT_FUNCTION)
-        Client.output('Select layer: ', CONFIG.DEFAULT_OUTPUT_FUNCTION, end='')
+            'Layer 10 - coordinates of points: ‘idx’, ‘size’, ‘coordinates’\n')
+        self.logger.info('Select layer: ')
         layer = int(input())
         if layer not in self.MAP_LAYERS:
             raise ValueError('No option for {} layer'.format(layer))
         return {'layer': layer}
 
     def on_move(self):
-        Client.output('Choose line idx: ', CONFIG.DEFAULT_OUTPUT_FUNCTION)
+        self.logger.info('Choose line idx: ')
         line_idx = int(input())
 
         direction = {'pos': 1, 'neg': -1, 'stop': 0}
-        Client.output('Choose direction (enable options {})'.format(list(direction)), CONFIG.DEFAULT_OUTPUT_FUNCTION)
+        self.logger.info('Choose direction (enable options {})'.format(list(direction)))
         speed = direction[input()]
 
-        Client.output('Choose train_idx: ', CONFIG.DEFAULT_OUTPUT_FUNCTION)
+        self.logger.info('Choose train_idx: ')
         train_idx = int(input())
         return {'line_idx': line_idx, 'speed': speed, 'train_idx': train_idx}
 
     def on_login(self):
-        Client.output('Write your name: ', CONFIG.DEFAULT_OUTPUT_FUNCTION, end='')
+        self.logger.info('Write your name: ')
         message = {'name': input()}
 
         not_required_options = (
@@ -47,25 +46,11 @@ class Player(Client):
         )
 
         for option, description in not_required_options:
-            Client.output('{} - {}'.format(option, description), CONFIG.DEFAULT_OUTPUT_FUNCTION)
-            Client.output('Press enter for default value...', CONFIG.DEFAULT_OUTPUT_FUNCTION)
-            Client.output(option.capitalize(), CONFIG.DEFAULT_OUTPUT_FUNCTION)
+            self.logger.info('{} - {}'.format(option, description))
+            self.logger.info('Press enter for default value...')
+            self.logger.info(option.capitalize())
             value = input()
             if value:
                 message[option] = int(value) if option.startswith('num') else value
 
         return message
-
-
-def main():
-    player = Player()
-    try:
-        player.run_server()
-    except Exception as e:
-        CONFIG.DEFAULT_OUTPUT_FUNCTION(e)
-
-
-if __name__ == '__main__':
-    CONFIG.DEFAULT_OUTPUT_FUNCTION('Starting server...')
-    main()
-    CONFIG.DEFAULT_OUTPUT_FUNCTION('End server...')

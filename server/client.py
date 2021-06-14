@@ -1,17 +1,19 @@
 import json
 
-import socket, threading, time
+import socket
 
 from config import CONFIG
 from defs import Result, Action
+from logger import get_logger
 
 
 class Client:
     MAP_LAYERS = {0, 1, 10}
 
-    def __init__(self, address=CONFIG.SERVER_ADDR, port=CONFIG.SERVER_PORT):
+    def __init__(self, address=CONFIG.SERVER_ADDR, port=CONFIG.SERVER_PORT, level='INFO'):
         self.server_address = address, port
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.logger = get_logger(self.__class__.__name__, level=level, )
         self.idx = ''
         self.ACTION_DICT = {
             Action.MAP: self.on_get_map,
@@ -68,13 +70,13 @@ class Client:
             self.server.connect(self.server_address)
             shutdown = False
             while not shutdown:
-                Client.output('{}. Action.LOGIN'.format(Action.LOGIN), CONFIG.DEFAULT_OUTPUT_FUNCTION)
-                Client.output('{}. Action.LOGOUT'.format(Action.LOGOUT), CONFIG.DEFAULT_OUTPUT_FUNCTION)
-                Client.output('{}. Action.MOVE'.format(Action.MOVE), CONFIG.DEFAULT_OUTPUT_FUNCTION)
-                Client.output('{}. Action.TURN'.format(Action.TURN), CONFIG.DEFAULT_OUTPUT_FUNCTION)
-                Client.output('{}. Action.PLAYER'.format(Action.PLAYER), CONFIG.DEFAULT_OUTPUT_FUNCTION)
-                Client.output('{}. Action.GAMES'.format(Action.GAMES), CONFIG.DEFAULT_OUTPUT_FUNCTION)
-                Client.output('{}. Action.MAP'.format(Action.MAP), CONFIG.DEFAULT_OUTPUT_FUNCTION)
+                self.logger.info('{}. Action.LOGIN'.format(Action.LOGIN))
+                self.logger.info('{}. Action.LOGOUT'.format(Action.LOGOUT))
+                self.logger.info('{}. Action.MOVE'.format(Action.MOVE))
+                self.logger.info('{}. Action.TURN'.format(Action.TURN))
+                self.logger.info('{}. Action.PLAYER'.format(Action.PLAYER))
+                self.logger.info('{}. Action.GAMES'.format(Action.GAMES))
+                self.logger.info('{}. Action.MAP'.format(Action.MAP))
 
                 selected_action = None
                 try:
@@ -83,35 +85,36 @@ class Client:
                     method = self.ACTION_DICT[selected_action]
                     message = method()
                     converted_message = self.convert_message(selected_action, message)
-                    Client.output(converted_message, CONFIG.DEFAULT_OUTPUT_FUNCTION)
                     self.send_message(converted_message)
 
                     result, message, data = self.receive_message()
 
                     if result == Result.OKEY:
-                        Client.output('Done', CONFIG.DEFAULT_OUTPUT_FUNCTION)
+                        self.logger.info('Done')
                     else:
-                        Client.output('Error {}'.format(result), CONFIG.DEFAULT_OUTPUT_FUNCTION)
+                        self.logger.warning('Error {}'.format(result))
 
                     if selected_action == Action.LOGIN:
                         self.idx = message.get('idx')
 
-                    Client.output('Received message: ', CONFIG.DEFAULT_OUTPUT_FUNCTION)
-                    Client.output(Client.get_pretty_string(message), CONFIG.DEFAULT_OUTPUT_FUNCTION)
+                    self.logger.info('Received message: ')
+                    self.logger.info(Client.get_pretty_string(message))
                 except ValueError as err:
-                    Client.output(err, CONFIG.DEFAULT_OUTPUT_FUNCTION)
+                    self.logger.warning(err)
                 except KeyError as err:
-                    Client.output('No functions for {} yet'.format(selected_action), CONFIG.DEFAULT_OUTPUT_FUNCTION)
+                    self.logger.warning('No functions for {} yet'.format(selected_action))
                 except KeyboardInterrupt as err:
                     shutdown = True
-                    Client.output('End the code...', CONFIG.DEFAULT_OUTPUT_FUNCTION)
+                    self.logger.info('End the code...')
         except json.decoder.JSONDecodeError as err:
-            Client.output(err, CONFIG.DEFAULT_OUTPUT_FUNCTION)
+            self.logger.error(err)
 
         except Exception as err:
-            Client.output(err, CONFIG.DEFAULT_OUTPUT_FUNCTION)
+            self.logger.error(err)
         finally:
-            Client.output('Close the connection...', CONFIG.DEFAULT_OUTPUT_FUNCTION)
+            self.logger.info('Close the connection...')
+            if self.logger.is_queued:
+                self.logger.stop()
             self.server.close()
 
     def receive_message(self):
@@ -149,12 +152,6 @@ class Client:
         """ Sends a message to the connected server
         """
         self.server.sendto(message, self.server_address)
-
-    @staticmethod
-    def output(message, output_function, **kwargs):
-        """ Outputs a message using an auxiliary function
-        """
-        output_function(message, **kwargs)
 
     @staticmethod
     def get_pretty_string(message):

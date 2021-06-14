@@ -9,8 +9,8 @@ from entity.line import Line
 
 
 class Bot(Client):
-    def __init__(self, address=CONFIG.SERVER_ADDR, port=CONFIG.SERVER_PORT):
-        super().__init__(address, port)
+    def __init__(self, address=CONFIG.SERVER_ADDR, port=CONFIG.SERVER_PORT, log_level='INFO'):
+        super().__init__(address, port, log_level)
         self.map_layer = 0
         self.train_paths = dict()
 
@@ -28,7 +28,7 @@ class Bot(Client):
         return {'layer': self.map_layer}
 
     def on_move(self) -> dict:
-        Client.output('Input train_idx: ', CONFIG.DEFAULT_OUTPUT_FUNCTION)
+        self.logger.info('Input train_idx: ')
         train_idx = int(input())
         result, message, data = self.get_map(layer=1)
         train = Train(train_idx)
@@ -56,7 +56,7 @@ class Bot(Client):
             raise ValueError('Train is moving')
 
         if train.idx not in self.train_paths:
-            Client.output('Input end point_idx: ', CONFIG.DEFAULT_OUTPUT_FUNCTION, end='')
+            self.logger.info('Input end point_idx: ')
             end_point_idx = int(input())
             self.generate_moves(train.idx, line.points[train.position != 0], end_point_idx)
 
@@ -68,8 +68,8 @@ class Bot(Client):
 
     def on_login(self):
         name = choice(('Nazar', 'Oleg', 'Petr', 'Igor', 'Taras')) + 'Bot'
-        Client.output('Bot name: {}'.format(name), CONFIG.DEFAULT_OUTPUT_FUNCTION)
-        Client.output('Input game name: ', CONFIG.DEFAULT_OUTPUT_FUNCTION, end='')
+        self.logger.info('Bot name: {}'.format(name))
+        self.logger.info('Input game name: ', end='')
         return {'name': name, 'game': input()}
 
     def get_map(self, layer):
