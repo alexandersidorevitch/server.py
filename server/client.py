@@ -9,7 +9,7 @@ from logger import get_logger
 from abstract_client import AbstractClient
 
 
-class Client(metaclass=ABCMeta, AbstractClient):
+class Client(AbstractClient, metaclass=ABCMeta):
     MAP_LAYERS = {0, 1, 10}
 
     def __init__(self, address=CONFIG.SERVER_ADDR, port=CONFIG.SERVER_PORT, level='INFO'):
