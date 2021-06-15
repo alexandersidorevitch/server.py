@@ -1,13 +1,15 @@
 import json
 
 import socket
+from abc import ABCMeta, abstractmethod
 
 from config import CONFIG
 from defs import Result, Action
 from logger import get_logger
+from abstract_client import AbstractClient
 
 
-class Client:
+class Client(metaclass=ABCMeta, AbstractClient):
     MAP_LAYERS = {0, 1, 10}
 
     def __init__(self, address=CONFIG.SERVER_ADDR, port=CONFIG.SERVER_PORT, level='INFO'):
@@ -45,23 +47,23 @@ class Client:
         """
         return None
 
+    @abstractmethod
     def on_get_map(self):
         """ Triggered when the map event is called
         """
-        # To override
-        raise NotImplementedError('Needs to redefine the method in the child class')
+        pass
 
+    @abstractmethod
     def on_move(self):
         """ Triggered when the move event is called
         """
-        # To override
-        raise NotImplementedError('Needs to redefine the method in the child class')
+        pass
 
+    @abstractmethod
     def on_login(self):
         """ Triggered when the login event is called
         """
-        # To override
-        raise NotImplementedError('Needs to redefine the method in the child class')
+        pass
 
     def run_server(self):
         """ Starts the server
@@ -96,7 +98,7 @@ class Client:
                 except ValueError as err:
                     self.logger.warning(err)
                 except KeyError as err:
-                    self.logger.warning('No functions for {} yet'.format(selected_action))
+                    self.logger.warning('No functions for {} yet'.format(str(selected_action)))
                 except KeyboardInterrupt as err:
                     shutdown = True
                     self.logger.info('End the code...')
@@ -128,20 +130,6 @@ class Client:
             message += self.server.recv(CONFIG.RECEIVE_CHUNK_SIZE)
         return result, json.loads(message.decode('utf-8') or '{}'), message[message_len:]
 
-    @staticmethod
-    def convert_message(action, message=None):
-        """ Converts the message to the desired format
-        """
-        converted_message = action.to_bytes(length=CONFIG.ACTION_HEADER, byteorder='little')
-        if message is None:
-            return converted_message + int.to_bytes(0, length=CONFIG.MSGLEN_HEADER,
-                                                    byteorder='little')
-        dump_message = json.dumps(message)
-        return converted_message + len(
-            dump_message).to_bytes(length=CONFIG.MSGLEN_HEADER,
-                                   byteorder='little') + dump_message.encode(
-            'utf-8')
-
     def send_message(self, message: bytes) -> None:
         """ Sends a message to the connected server
         """
@@ -156,6 +144,20 @@ class Client:
                 )
             )
         )
+
+    @staticmethod
+    def convert_message(action, message=None):
+        """ Converts the message to the desired format
+        """
+        converted_message = action.to_bytes(length=CONFIG.ACTION_HEADER, byteorder='little')
+        if message is None:
+            return converted_message + int.to_bytes(0, length=CONFIG.MSGLEN_HEADER,
+                                                    byteorder='little')
+        dump_message = json.dumps(message)
+        return converted_message + len(
+            dump_message).to_bytes(length=CONFIG.MSGLEN_HEADER,
+                                   byteorder='little') + dump_message.encode(
+            'utf-8')
 
     @staticmethod
     def get_pretty_string(message):
