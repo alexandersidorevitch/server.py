@@ -4,12 +4,12 @@ import socket
 from abc import ABCMeta, abstractmethod
 
 from config import CONFIG
-from defs import Result, Action
-from logger import get_logger
 from abstract_client import AbstractClient
+from defs import Action, Result
+from logger import get_logger
 
 
-class Client(AbstractClient, metaclass=ABCMeta):
+class Client(AbstractClient):
     MAP_LAYERS = {0, 1, 10}
 
     def __init__(self, address=CONFIG.SERVER_ADDR, port=CONFIG.SERVER_PORT, level='INFO'):
@@ -17,53 +17,7 @@ class Client(AbstractClient, metaclass=ABCMeta):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.logger = get_logger(self.__class__.__name__, level=level, )
         self.idx = ''
-        self.ACTION_DICT = {
-            Action.MAP: self.on_get_map,
-            Action.MOVE: self.on_move,
-            Action.LOGOUT: self.on_logout,
-            Action.LOGIN: self.on_login,
-            Action.TURN: self.on_turn,
-            Action.GAMES: self.on_games,
-            Action.PLAYER: self.on_player,
-        }
-
-    def on_turn(self):
-        """ Triggered when the turn event is called
-        """
-        return None
-
-    def on_games(self):
-        """ Triggered when the game event is called
-        """
-        return None
-
-    def on_player(self):
-        """ Triggered when the player event is called
-        """
-        return None
-
-    def on_logout(self):
-        """ Triggered when the logout event is called
-        """
-        return None
-
-    @abstractmethod
-    def on_get_map(self):
-        """ Triggered when the map event is called
-        """
-        pass
-
-    @abstractmethod
-    def on_move(self):
-        """ Triggered when the move event is called
-        """
-        pass
-
-    @abstractmethod
-    def on_login(self):
-        """ Triggered when the login event is called
-        """
-        pass
+        self.ACTION_DICT = {}
 
     def run_server(self):
         """ Starts the server
@@ -91,10 +45,10 @@ class Client(AbstractClient, metaclass=ABCMeta):
                         self.logger.warning('Error {}'.format(result))
 
                     if selected_action == Action.LOGIN:
-                        self.idx = message.get('idx')
+                        self.idx = message.get('idx', self.idx)
 
                     self.logger.info('Received message: ')
-                    self.logger.info(Client.get_pretty_string(message))
+                    self.logger.info(self.get_pretty_string(message))
                 except ValueError as err:
                     self.logger.warning(err)
                 except KeyError as err:
@@ -155,9 +109,8 @@ class Client(AbstractClient, metaclass=ABCMeta):
                                                     byteorder='little')
         dump_message = json.dumps(message)
         return converted_message + len(
-            dump_message).to_bytes(length=CONFIG.MSGLEN_HEADER,
-                                   byteorder='little') + dump_message.encode(
-            'utf-8')
+            dump_message
+        ).to_bytes(length=CONFIG.MSGLEN_HEADER, byteorder='little') + dump_message.encode('utf-8')
 
     @staticmethod
     def get_pretty_string(message):

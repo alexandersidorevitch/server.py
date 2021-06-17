@@ -12,15 +12,31 @@ class Bot(Client):
     def __init__(self, address=CONFIG.SERVER_ADDR, port=CONFIG.SERVER_PORT, log_level='INFO'):
         super().__init__(address=address, port=port, level=log_level)
         self.map_layer = 0
-        self.train_paths = dict()
+        self.train_paths = {}
+        self.ACTION_DICT = {
+            Action.MAP: self.on_get_map,
+            Action.MOVE: self.on_move,
+            Action.LOGOUT: self.on_logout,
+            Action.LOGIN: self.on_login,
+            Action.TURN: self.on_turn,
+            Action.GAMES: self.on_game,
+            Action.PLAYER: self.on_player,
+        }
 
-    def generate_moves(self, train_idx, start_point_idx, end_point_idx) -> None:
-        """ Generates moves for the selected train
-        """
-        result, message, data = self.get_map(0)
+    def on_turn(self):
+        return None
 
-        g = graph.Graph(message)
-        self.train_paths[train_idx] = g.dijkstra(start_point_idx, end_point_idx).get('path')
+    def on_game(self):
+        return None
+
+    def on_player(self):
+        return None
+
+    def on_get_map(self):
+        return None
+
+    def on_logout(self):
+        return None
 
     def on_get_map(self) -> dict:
         if self.map_layer not in self.MAP_LAYERS:
@@ -80,3 +96,11 @@ class Bot(Client):
         converted_message = self.convert_message(Action.MAP, message)
         self.send_message(converted_message)
         return self.receive_message()
+
+    def generate_moves(self, train_idx, start_point_idx, end_point_idx) -> None:
+        """ Generates moves for the selected train
+        """
+        result, message, data = self.get_map(0)
+
+        g = graph.Graph(message)
+        self.train_paths[train_idx] = g.dijkstra(start_point_idx, end_point_idx).get('path')

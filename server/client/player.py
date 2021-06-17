@@ -8,6 +8,30 @@ from defs import Action, Result
 class Player(Client):
     def __init__(self, address=CONFIG.SERVER_ADDR, port=CONFIG.SERVER_PORT, log_level='INFO'):
         super().__init__(address=address, port=port, level=log_level)
+        self.ACTION_DICT = {
+            Action.MAP: self.on_get_map,
+            Action.MOVE: self.on_move,
+            Action.LOGOUT: self.on_logout,
+            Action.LOGIN: self.on_login,
+            Action.TURN: self.on_turn,
+            Action.GAMES: self.on_game,
+            Action.PLAYER: self.on_player,
+        }
+
+    def on_turn(self):
+        return None
+
+    def on_game(self):
+        return None
+
+    def on_player(self):
+        return None
+
+    def on_get_map(self):
+        return None
+
+    def on_logout(self):
+        return None
 
     def on_get_map(self):
         self.logger.info(

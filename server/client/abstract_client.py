@@ -4,13 +4,13 @@ from abc import ABCMeta, abstractmethod
 class AbstractClient(metaclass=ABCMeta):
 
     @abstractmethod
-    def run_server(self):
+    def run_server(self) -> None:
         """ Starts the server
         """
         pass
 
     @abstractmethod
-    def receive_message(self):
+    def receive_message(self) -> dict:
         """ Accepts a message from a connected server
         """
         pass
