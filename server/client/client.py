@@ -4,7 +4,7 @@ import socket
 from abc import ABCMeta, abstractmethod
 
 from config import CONFIG
-from abstract_client import AbstractClient
+from client.abstract_client import AbstractClient
 from defs import Action, Result
 from logger import get_logger
 

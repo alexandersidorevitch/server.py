@@ -6,7 +6,7 @@ from config import CONFIG
 from defs import Action, Result
 from logger import get_logger
 from threading import Thread, Lock
-from client import Client
+from client.client import Client
 from functools import wraps
 
 

@@ -1,6 +1,6 @@
 import json
 
-from client import Client
+from client.client import Client
 from config import CONFIG
 from defs import Action, Result
 
