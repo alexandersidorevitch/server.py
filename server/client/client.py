@@ -1,11 +1,10 @@
 import json
-
 import socket
-from abc import ABCMeta, abstractmethod
 
-from config import CONFIG
 from client.abstract_client import AbstractClient
-from defs import Action, Result
+from config import CONFIG
+from defs import Action
+from defs import Result
 from logger import get_logger
 
 

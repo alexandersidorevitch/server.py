@@ -1,8 +1,6 @@
-import json
-
 from client.client import Client
 from config import CONFIG
-from defs import Action, Result
+from defs import Action
 
 
 class Player(Client):

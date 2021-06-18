@@ -1,13 +1,11 @@
-import json
-import socket
-
-from abstract_client import AbstractClient
-from config import CONFIG
-from defs import Action, Result
-from logger import get_logger
-from threading import Thread, Lock
-from client.client import Client
 from functools import wraps
+from threading import Lock
+from threading import Thread
+
+from client.client import Client
+from config import CONFIG
+from defs import Action
+from defs import Result
 
 
 def in_one_thread(func):
@@ -81,7 +79,6 @@ class Observer(Client):
             if self.logger.is_queued:
                 self.logger.stop()
             self.server.close()
-
 
     def receive_notification(self):
         while not self.shutdown:

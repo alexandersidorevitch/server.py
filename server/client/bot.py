@@ -3,9 +3,9 @@ from random import choice
 from client.client import Client
 from config import CONFIG
 from defs import Action
-from graph import graph
-from entity.train import Train
 from entity.line import Line
+from entity.train import Train
+from graph import graph
 
 
 class Bot(Client):
