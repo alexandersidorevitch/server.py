@@ -9,9 +9,9 @@ from db.session import session_ctx, Session
 from defs import Action
 from logger import log
 
-from player import Player
-from bot import Bot
-from observer import Observer
+from client.player import Player
+from client.bot import Bot
+from client.observer import Observer
 
 __all__ = ['activate_map', 'generate_map', 'generate_all_maps', 'db_init', 'generate_replay', 'run_player', 'run_bot',
            'run_observer']
