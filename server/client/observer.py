@@ -19,7 +19,7 @@ def in_one_thread(function):
 class Observer(Client):
     def __init__(self, address=CONFIG.SERVER_ADDR, port=CONFIG.SERVER_PORT, log_level='INFO'):
         super().__init__(address=address, port=port, level=log_level)
-        Observer.receive_message = in_one_thread(Observer.receive_message)
+        # Observer.receive_message = in_one_thread(Observer.receive_message)
         self.receive_thread = Thread(target=self.receive_notification)
         self._receive_lock = Lock()
         self.shutdown = False
