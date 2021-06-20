@@ -9,7 +9,6 @@ from defs import Result
 
 
 def in_one_thread(function):
-    @wraps
     def wrapper(self, *args, **kwargs):
         with self._receive_lock:
             return function(self, *args, **kwargs)
