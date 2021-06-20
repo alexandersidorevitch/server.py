@@ -75,10 +75,10 @@ class Observer(Client):
             self.logger.error(err)
         finally:
             self.logger.info('Close the connection...')
-            self.receive_thread.join()
             if self.logger.is_queued:
                 self.logger.stop()
             self.server.close()
+            self.receive_thread.join()
 
     def receive_notification(self):
         while not self.shutdown:
