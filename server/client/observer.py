@@ -8,11 +8,11 @@ from defs import Action
 from defs import Result
 
 
-def in_one_thread(func):
+def in_one_thread(function):
     @wraps
     def wrapper(self, *args, **kwargs):
         with self._receive_lock:
-            return func(self, *args, **kwargs)
+            return function(self, *args, **kwargs)
 
     return wrapper
 
@@ -39,6 +39,7 @@ class Observer(Client):
     def run_server(self):
         try:
             self.server.connect(self.server_address)
+            self.receive_thread.start()
             self.shutdown = False
             while not self.shutdown:
                 self.output_available_options()
