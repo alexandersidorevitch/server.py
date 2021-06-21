@@ -19,7 +19,6 @@ def in_one_thread(function):
 class Observer(Client):
     def __init__(self, address=CONFIG.SERVER_ADDR, port=CONFIG.SERVER_PORT, log_level='INFO'):
         super().__init__(address=address, port=port, level=log_level)
-        # Observer.receive_message = in_one_thread(Observer.receive_message)
         self.receive_thread = Thread(target=self.receive_notification)
         self._receive_lock = Lock()
         self.shutdown = False
@@ -51,19 +50,6 @@ class Observer(Client):
                         message = method()
                         converted_message = self.convert_message(selected_action, message)
                         self.send_message(converted_message)
-
-                        result, message, data = self.receive_message()
-
-                        if result == Result.OKEY:
-                            self.logger.info('Done')
-                        else:
-                            self.logger.warning('Error {}'.format(result))
-
-                        if selected_action == Action.LOGIN:
-                            self.idx = message.get('idx', self.idx)
-
-                        self.logger.info('Received message: ')
-                        self.logger.info(self.get_pretty_string(message))
                 except ValueError as err:
                     self.logger.warning(err)
                 except KeyError as err:
@@ -80,14 +66,21 @@ class Observer(Client):
             self.server.close()
             self.receive_thread.join()
 
+    def receive_message(self):
+        data = self.receive_headers()
+        with self._receive_lock:
+            return self.receive_data(data)
+
     def receive_notification(self):
         while not self.shutdown:
-            result, message, data = self.receive_message()
-
+            try:
+                result, message, data = self.receive_message()
+            except OSError:
+                break
             if result == Result.OKEY:
                 self.logger.info('Done')
+                self.logger.info('Received message: ')
+                self.logger.info(self.get_pretty_string(message))
             else:
-                self.logger.warning('Error {}'.format(result))
+                self.logger.error('Error {}'.format(result))
 
-            self.logger.info('Received message: ')
-            self.logger.info(self.get_pretty_string(message))

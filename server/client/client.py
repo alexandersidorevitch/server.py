@@ -69,19 +69,24 @@ class Client(AbstractClient):
     def receive_message(self):
         """ Accepts a message from a connected server
         """
-        data = b''
-        while len(data) < CONFIG.RESULT_HEADER + CONFIG.MSGLEN_HEADER:
-            data += self.server.recv(CONFIG.RECEIVE_CHUNK_SIZE)
+        data = self.receive_headers()
 
+        return self.receive_data(data)
+
+    def receive_data(self, data):
         result = Result(int.from_bytes(data[0:CONFIG.ACTION_HEADER], byteorder='little'))
-
         data = data[CONFIG.ACTION_HEADER:]
         message_len = int.from_bytes(data[0:CONFIG.MSGLEN_HEADER], byteorder='little')
-
         message = data[CONFIG.MSGLEN_HEADER:]
         while len(message) < message_len:
             message += self.server.recv(CONFIG.RECEIVE_CHUNK_SIZE)
         return result, json.loads(message.decode('utf-8') or '{}'), message[message_len:]
+
+    def receive_headers(self):
+        data = b''
+        while len(data) < CONFIG.RESULT_HEADER + CONFIG.MSGLEN_HEADER:
+            data += self.server.recv(CONFIG.RECEIVE_CHUNK_SIZE)
+        return data
 
     def send_message(self, message: bytes) -> None:
         """ Sends a message to the connected server
