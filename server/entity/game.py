@@ -16,7 +16,6 @@ from entity.player import Player
 from entity.point import Point
 from entity.post import Post, PostType
 from entity.train import Train
-from entity.observer import Observer
 from entity.serializable import Serializable
 from logger import log
 
@@ -173,7 +172,7 @@ class Game(Thread):
 
         return player
 
-    def add_observer(self, observer: Observer):
+    def add_observer(self, observer):
         self.observers[id(observer)] = observer
         log.info('New observer has been connected to the game, observer: {}'.format(observer), game=self)
 
@@ -183,7 +182,7 @@ class Game(Thread):
         player.in_game = False
         self.delete_if_no_players()
 
-    def remove_observer(self, observer: Observer):
+    def remove_observer(self, observer):
         self.observers.pop(observer)
 
     def turn(self, player: Player):
