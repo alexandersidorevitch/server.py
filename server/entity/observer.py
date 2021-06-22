@@ -18,6 +18,7 @@ def game_required(func):
             raise errors.BadCommand('A game is not chosen')
         else:
             return func(self, *args, **kwargs)
+
     return wrapped
 
 
@@ -48,9 +49,8 @@ class Observer(object):
     def games_to_json_str(self):
         """ Retrieves list of games.
         """
-        games_list = []
-        for game_data, game_length in game_db.get_all_games():
-            game = {
+        games_list = [
+            {
                 'idx': game_data.id,
                 'name': game_data.name,
                 'created_at': game_data.created_at.strftime(CONFIG.TIME_FORMAT),
@@ -59,7 +59,8 @@ class Observer(object):
                 'num_players': game_data.num_players,
                 'data': game_data.data,
             }
-            games_list.append(game)
+            for game_data, game_length in game_db.get_all_games()
+        ]
 
         games = Serializable()
         games.set_attributes(games=games_list)

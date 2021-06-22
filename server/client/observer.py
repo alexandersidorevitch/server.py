@@ -40,7 +40,7 @@ class Observer(Client):
             self.receive_thread.start()
             self.shutdown = False
             while not self.shutdown:
-                self.output_available_options()
+
 
                 selected_action = None
                 try:
@@ -73,9 +73,11 @@ class Observer(Client):
 
     def receive_notification(self):
         while not self.shutdown:
+            self.output_available_options()
             try:
                 result, message, data = self.receive_message()
             except OSError:
+                self.shutdown = True
                 break
             if result == Result.OKEY:
                 self.logger.info('Done')

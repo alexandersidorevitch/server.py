@@ -41,6 +41,7 @@ class BaseConfig(object):
 
     DEFAULT_NUM_PLAYERS = 1
     DEFAULT_NUM_TURNS = -1
+    DEFAULT_NUM_OBSERVERS = 0
     TRAINS_COUNT = 8
     FUEL_ENABLED = False
     TRAIN_ALWAYS_DEVASTATED = True

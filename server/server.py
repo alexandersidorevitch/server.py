@@ -4,6 +4,7 @@ import json
 import socket
 from functools import wraps
 from socketserver import ThreadingTCPServer, BaseRequestHandler
+from threading import Thread
 
 from invoke import task
 
@@ -42,6 +43,7 @@ class GameServerRequestHandler(BaseRequestHandler):
         self.game_idx = None
         self.observer = None
         self.closed = None
+        self._observer_notification_thread = None
         super(GameServerRequestHandler, self).__init__(*args, **kwargs)
 
     def setup(self):
@@ -57,6 +59,11 @@ class GameServerRequestHandler(BaseRequestHandler):
             else:
                 self.closed = True
 
+    def _observer_notification(self):
+        while not self.closed:
+            self.game._tick_done_condition.wait()
+            self.write_response(Result.OKEY, self.game.message_for_observer())
+
     @staticmethod
     def shutdown_all_sockets():
         for handler in GameServerRequestHandler.HANDLERS.values():
@@ -64,8 +71,12 @@ class GameServerRequestHandler(BaseRequestHandler):
 
     def finish(self):
         log.warn('Connection from {} lost'.format(self.client_address), game=self.game)
-        if self.game is not None and self.player is not None and self.player.in_game:
-            self.game.remove_player(self.player)
+        if self.game is not None:
+            if self.player is not None and self.player.in_game:
+                self.game.remove_player(self.player)
+            if self.observer is not None:
+                self.game.remove_observer(self.observer)
+                self._observer_notification_thread.join()
             if not self.observer:
                 game_db.add_action(self.game_idx, Action.LOGOUT, player_idx=self.player.idx)
         self.HANDLERS.pop(id(self))
@@ -190,8 +201,9 @@ class GameServerRequestHandler(BaseRequestHandler):
         game_name = data.get('game', 'Game of {}'.format(player_name))
         num_players = data.get('num_players', CONFIG.DEFAULT_NUM_PLAYERS)
         num_turns = data.get('num_turns', CONFIG.DEFAULT_NUM_TURNS)
+        num_observers = data.get('num_observers', CONFIG.DEFAULT_NUM_OBSERVERS)
 
-        game = Game.get(game_name, num_players=num_players, num_turns=num_turns)
+        game = Game.get(game_name, num_players=num_players, num_turns=num_turns, num_observers=num_observers)
 
         game.check_state(GameState.INIT, GameState.RUN)
         player = game.add_player(player)
@@ -206,8 +218,12 @@ class GameServerRequestHandler(BaseRequestHandler):
 
     @login_required
     def on_logout(self, _):
-        log.info('Logout player: {}'.format(self.player.name), game=self.game)
-        self.game.remove_player(self.player)
+        if self.observer:
+            log.info('Logout observer', game=self.game)
+            self.game.remove_observer(self.observer)
+        else:
+            self.game.remove_player(self.player)
+            log.info('Logout player: {}'.format(self.player.name), game=self.game)
         self.closed = True
         return Result.OKEY, None
 
@@ -259,6 +275,8 @@ class GameServerRequestHandler(BaseRequestHandler):
         else:
             self.observer = Observer()
             message = self.observer.games_to_json_str()
+            self._observer_notification_thread = Thread(target=self._observer_notification)
+            self._observer_notification_thread.start()
             return Result.OKEY, message
 
     ACTION_MAP = {

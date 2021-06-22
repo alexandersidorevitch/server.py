@@ -4,20 +4,21 @@ import math
 import random
 from contextlib import contextmanager
 from enum import IntEnum
-from threading import Thread, Event, Lock, Condition
+from threading import Condition, Event, Lock, Thread
 
 import errors
 from config import CONFIG
 from db import game_db
 from defs import Action
-from entity.event import EventType, Event as GameEvent
+from entity.event import Event as GameEvent, EventType
 from entity.map import Map
 from entity.player import Player
 from entity.point import Point
-from entity.post import PostType, Post
+from entity.post import Post, PostType
 from entity.train import Train
+from entity.observer import Observer
+from entity.serializable import Serializable
 from logger import log
-from loguru import logger
 
 
 class GameState(IntEnum):
@@ -29,12 +30,12 @@ class GameState(IntEnum):
 
 
 class Game(Thread):
-
     GAMES = {}  # All registered games.
 
     def __init__(
             self, name, observed=False, map_name=None,
-            num_players=CONFIG.DEFAULT_NUM_PLAYERS, num_turns=CONFIG.DEFAULT_NUM_TURNS
+            num_players=CONFIG.DEFAULT_NUM_PLAYERS, num_turns=CONFIG.DEFAULT_NUM_TURNS,
+            num_observers=CONFIG.DEFAULT_NUM_OBSERVERS
     ):
         super(Game, self).__init__(name=name)
         log.info('Create game, name: \'{}\''.format(self.name))
@@ -44,6 +45,7 @@ class Game(Thread):
         self.observed = observed
         self.num_players = num_players
         self.num_turns = num_turns
+        self.num_observers = num_observers
         self.map = Map(use_active=True) if map_name is None else Map(name=map_name)
         if self.num_players > len(self.map.towns):
             raise errors.BadCommand(
@@ -59,6 +61,7 @@ class Game(Thread):
         self.players = {}
         self.trains = {}
         self.next_train_moves = {}
+        self.observers = {}
         self.event_cooldowns = CONFIG.EVENT_COOLDOWNS_ON_START.copy()
         self._lock = Lock()
         self._stop_event = Event()
@@ -154,7 +157,8 @@ class Game(Thread):
                 self.put_train_into_town(train, with_cooldown=False)
 
             # Start thread with game loop:
-            if self.num_players == len(self.players) and self.state == GameState.INIT:
+            if self.num_players == len(self.players) and self.num_observers == len(
+                    self.observers) and self.state == GameState.INIT:
                 self.start()
 
         # Set player's rating:
@@ -169,11 +173,18 @@ class Game(Thread):
 
         return player
 
+    def add_observer(self, observer: Observer):
+        self.observers[id(observer)] = observer
+        log.info('New observer has been connected to the game, observer: {}'.format(observer), game=self)
+
     def remove_player(self, player: Player):
         """ Removes player from the game.
         """
         player.in_game = False
         self.delete_if_no_players()
+
+    def remove_observer(self, observer: Observer):
+        self.observers.pop(observer)
 
     def turn(self, player: Player):
         """ Makes next turn.
@@ -790,6 +801,53 @@ class Game(Thread):
             train.events = train.events[-CONFIG.MAX_EVENT_MESSAGES:]
         for post in self.map.posts.values():
             post.events = post.events[-CONFIG.MAX_EVENT_MESSAGES:]
+
+    def message_for_observer(self):
+        players_list = [
+            {
+                'idx': player.idx,
+                'town': {
+                    'idx': player.town.idx,
+                    'armor': player.town.armor,
+                    'level': player.town.level,
+                    'event': player.town.events[-1] if len(player.town.events) else None
+                }
+            }
+            for player in self.players
+        ]
+        trains_list = [
+            {
+                'idx': train.idx,
+                'goods': train.goods,
+                'goods_type': train.goods_type,
+                'level': train.level
+            }
+            for train in self.trains
+        ]
+        storages_list = [
+            {
+                'idx': storage.idx,
+                'armor': storage.armor
+            }
+            for storage in filter(lambda post: post.type == PostType.STORAGE,
+                                  self.map.posts)
+        ]
+        markets_list = [
+            {
+                'idx': market.idx,
+                'armor': market.product
+            }
+            for market in filter(lambda post: post.type == PostType.MARKET,
+                                 self.map.posts)
+        ]
+        message = Serializable()
+        message.set_attributes(
+            players=players_list,
+            trains=trains_list,
+            storages=storages_list,
+            markets=markets_list
+        )
+        return message.to_json_str()
 
     def __del__(self):
         log.info('Game deleted', game=self)
