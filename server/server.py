@@ -61,6 +61,7 @@ class GameServerRequestHandler(BaseRequestHandler):
 
     def _observer_notification(self):
         while not self.closed:
+            log.debug('TICK!', game=self.game)
             self.game._tick_done_condition.wait()
             self.write_response(Result.OKEY, self.game.message_for_observer())
 
