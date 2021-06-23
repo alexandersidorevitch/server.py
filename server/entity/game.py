@@ -273,6 +273,7 @@ class Game(Thread):
                     self._start_tick_event.clear()
                 for player in self.players.values():
                     player.turn_called = False
+                log.debug('NOTIFY!!!', game=self)
                 self._tick_done_condition.notify_all()
 
     def tick(self):
