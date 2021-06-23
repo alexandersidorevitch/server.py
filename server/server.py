@@ -62,10 +62,11 @@ class GameServerRequestHandler(BaseRequestHandler):
     def _observer_notification(self):
         while not self.closed:
             if self.observer.game:
-                log.debug('TICK!', game=self.observer.game)
-                self.observer.game._tick_done_condition.wait()
-                self.write_response(Result.OKEY, self.observer.game.message_for_observer())
-                log.debug('DONE TICK!', game=self.observer.game)
+                with self.observer.game._tick_done_condition:
+                    log.debug('TICK!', game=self.observer.game)
+                    self.observer.game._tick_done_condition.wait()
+                    self.write_response(Result.OKEY, self.observer.game.message_for_observer())
+                    log.debug('DONE TICK!', game=self.observer.game)
 
     @staticmethod
     def shutdown_all_sockets():
