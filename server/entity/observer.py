@@ -196,6 +196,8 @@ class Observer(object):
         self.actions = game_db.get_all_actions(game_idx)
         self.max_turn = game_length
         self.reset_game()
+        if game is not None:
+            self.game.add_observer(self)
         log.info('Observer selected game: {}'.format(self.game_name))
 
         return Result.OKEY, None
