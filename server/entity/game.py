@@ -843,7 +843,7 @@ class Game(Thread):
                 'armor': storage.armor
             }
             for storage in filter(lambda post: post.type == PostType.STORAGE,
-                                  self.map.posts)
+                                  self.map.posts.values())
         ]
         markets_list = [
             {
@@ -851,7 +851,7 @@ class Game(Thread):
                 'product': market.product
             }
             for market in filter(lambda post: post.type == PostType.MARKET,
-                                 self.map.posts)
+                                 self.map.posts.values())
         ]
         message = Serializable()
         message.set_attributes(
