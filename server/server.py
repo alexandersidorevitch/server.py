@@ -60,11 +60,11 @@ class GameServerRequestHandler(BaseRequestHandler):
                 self.closed = True
 
     def _observer_notification(self):
-        while not self.closed:
+        while not self.closed and not (self.observer.game is not None and self.observer.game._stop_event.is_set()):
             try:
                 if self.observer.game:
                     log.debug('TICK!', game=self.observer.game)
-                    self.observer.game._start_tick_event.wait(CONFIG.TURN_TIMEOUT)
+                    self.observer.game.tick_done_event.wait(CONFIG.TURN_TIMEOUT)
                     self.write_response(Result.OKEY, self.observer.game.message_for_observer())
                     log.debug('DONE TICK!', game=self.observer.game)
             except OSError:
