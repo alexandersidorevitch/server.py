@@ -65,6 +65,7 @@ class Game(Thread):
         self._lock = Lock()
         self._stop_event = Event()
         self._start_tick_event = Event()
+        self.tick_done_event = Event()
         self._tick_done_condition = Condition()
         random.seed()
 
@@ -275,6 +276,8 @@ class Game(Thread):
                     player.turn_called = False
                 log.debug('NOTIFY!!!', game=self)
                 self._tick_done_condition.notify_all()
+                if self.tick_done_event.is_set():
+                    self.tick_done_event.clear()
 
     def tick(self):
         """ Makes game tick. Updates dynamic game entities.
@@ -300,6 +303,8 @@ class Game(Thread):
 
         if 1 <= self.num_turns <= self.current_tick:
             self.finish()
+
+        self.tick_done_event.set()
 
     def train_in_point(self, train: Train, point_idx: int):
         """ Makes all needed actions when Train arrives to Point.
