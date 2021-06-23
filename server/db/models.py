@@ -98,6 +98,7 @@ class Game(Base):
     map_id = Column(Integer, ForeignKey('maps.id', ondelete='SET NULL'), index=True)
     num_players = Column(Integer, nullable=False)
     num_turns = Column(Integer, nullable=False)
+    num_observers = Column(Integer, nullable=False, default=0)
     data = Column(MutableDict.as_mutable(JSON))
     actions = relationship('Action', backref='game', lazy='dynamic')
 

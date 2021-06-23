@@ -99,6 +99,7 @@ class Game(Thread):
                         'name': game.name,
                         'num_players': game.num_players,
                         'num_turns': game.num_turns,
+                        'num_observers': game.num_observers,
                         'state': game.state,
                     }
                 )
@@ -173,7 +174,18 @@ class Game(Thread):
         return player
 
     def add_observer(self, observer):
-        self.observers[id(observer)] = observer
+        """ Adds observer to the game.
+        """
+        # Add new observer to the game:
+        with self._lock:
+            if self.num_observers == len(self.observers):
+                raise errors.AccessDenied('The maximum number of observers reached')
+
+            self.observers[id(observer)] = observer
+            # Start thread with game loop:
+            if self.num_players == len(self.players) and self.num_observers == len(
+                    self.observers) and self.state == GameState.INIT:
+                self.start()
         log.info('New observer has been connected to the game, observer: {}'.format(observer), game=self)
 
     def remove_player(self, player: Player):
@@ -183,6 +195,8 @@ class Game(Thread):
         self.delete_if_no_players()
 
     def remove_observer(self, observer):
+        """ Removes observer from the game.
+        """
         self.observers.pop(observer)
 
     def turn(self, player: Player):
@@ -834,7 +848,7 @@ class Game(Thread):
         markets_list = [
             {
                 'idx': market.idx,
-                'armor': market.product
+                'product': market.product
             }
             for market in filter(lambda post: post.type == PostType.MARKET,
                                  self.map.posts)

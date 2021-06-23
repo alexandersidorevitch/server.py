@@ -27,11 +27,13 @@ def truncate_tables(session=None):
 @session_wrapper
 def add_game(
         name, map_idx, session=None,
-        num_players=CONFIG.DEFAULT_NUM_PLAYERS, num_turns=CONFIG.DEFAULT_NUM_TURNS
+        num_players=CONFIG.DEFAULT_NUM_PLAYERS, num_turns=CONFIG.DEFAULT_NUM_TURNS,
+        num_observers=CONFIG.DEFAULT_NUM_OBSERVERS
 ):
     """ Creates a new Game in DB.
     """
-    new_game = Game(name=name, map_id=map_idx, num_players=num_players, num_turns=num_turns)
+    new_game = Game(name=name, map_id=map_idx, num_players=num_players, num_turns=num_turns,
+                    num_observers=num_observers)
     session.add(new_game)
     session.commit()  # Commit to get game's id.
     return new_game.id
