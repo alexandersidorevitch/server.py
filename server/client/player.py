@@ -64,7 +64,8 @@ class Player(Client):
             ('game', 'game’s name (use it to connect to existing game)'),
             ('num_turns', 'number of game turns to be played, default:'
                           ' -1 (if num_turns < 1 it means that the game is unlimited)'),
-            ('num_players', 'number of players in the game, default: 1')
+            ('num_players', 'number of players in the game, default: 1'),
+            ('num_observers', 'number of observers in the game, default: 0'),
         )
 
         for option, description in not_required_options:

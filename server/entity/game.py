@@ -55,7 +55,7 @@ class Game(Thread):
             self.game_idx = 0
         else:
             self.game_idx = game_db.add_game(
-                name, self.map.idx, num_players=num_players, num_turns=num_turns
+                name, self.map.idx, num_players=num_players, num_turns=num_turns, num_observers=num_observers
             )
         self.players = {}
         self.trains = {}
@@ -216,8 +216,7 @@ class Game(Thread):
         """
         log.info('Starting game', game=self)
         self.state = GameState.RUN
-        if not self.observed:
-            super().start()
+        super().start()
 
     def finish(self):
         """ Stops game ticks (game loop).
