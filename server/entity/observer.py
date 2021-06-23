@@ -71,7 +71,7 @@ class Observer(object):
     def reset_game(self):
         """ Resets the game to initial state.
         """
-        self.game = Game(
+        self.game = Game.get(
             self.game_name,
             observed=True,
             num_players=self.num_players,
