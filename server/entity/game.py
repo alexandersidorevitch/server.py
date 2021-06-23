@@ -826,7 +826,7 @@ class Game(Thread):
                     'event': player.town.events[-1] if len(player.town.events) else None
                 }
             }
-            for player in self.players
+            for player in self.players.values()
         ]
         trains_list = [
             {
@@ -835,7 +835,7 @@ class Game(Thread):
                 'goods_type': train.goods_type,
                 'level': train.level
             }
-            for train in self.trains
+            for train in self.trains.values()
         ]
         storages_list = [
             {
