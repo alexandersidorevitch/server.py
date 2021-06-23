@@ -58,6 +58,7 @@ class Observer(object):
                 'map_idx': game_data.map_id,
                 'length': game_length,
                 'num_players': game_data.num_players,
+                'num_observers': game_data.num_observers,
                 'data': game_data.data,
             }
             for game_data, game_length in game_db.get_all_games()
