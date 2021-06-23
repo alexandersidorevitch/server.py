@@ -64,7 +64,8 @@ class Observer(Client):
             if self.logger.is_queued:
                 self.logger.stop()
             self.server.close()
-            self.receive_thread.join()
+            if self.receive_thread.is_alive():
+                self.receive_thread.join()
 
     def receive_message(self):
         data = self.receive_headers()
