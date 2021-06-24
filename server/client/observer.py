@@ -1,25 +1,15 @@
-from functools import wraps
-from threading import Lock
-from threading import Thread
+from multiprocessing import Lock, Process
 
+import errors
 from client.client import Client
 from config import CONFIG
-from defs import Action
-from defs import Result
-
-
-def in_one_thread(function):
-    def wrapper(self, *args, **kwargs):
-        with self._receive_lock:
-            return function(self, *args, **kwargs)
-
-    return wrapper
+from defs import Action, Result
 
 
 class Observer(Client):
     def __init__(self, address=CONFIG.SERVER_ADDR, port=CONFIG.SERVER_PORT, log_level='INFO'):
         super().__init__(address=address, port=port, level=log_level)
-        self.receive_thread = Thread(target=self.receive_notification)
+        self.receive_process = Process(target=self.receive_notification)
         self._receive_lock = Lock()
         self.shutdown = False
         self.ACTION_DICT = {
@@ -37,35 +27,43 @@ class Observer(Client):
     def run_server(self):
         try:
             self.server.connect(self.server_address)
-            self.receive_thread.start()
+            self.receive_process.start()
             self.shutdown = False
+
             while not self.shutdown:
-
-
-                selected_action = None
                 try:
                     selected_action = Action(int(input()))
+
                     with self._receive_lock:
+                        if selected_action not in self.ACTION_DICT:
+                            raise errors.ResourceNotFound(
+                                'Functions for {} are not implemented yet'.format(str(selected_action)))
+
                         method = self.ACTION_DICT[selected_action]
                         message = method()
                         converted_message = self.convert_message(selected_action, message)
                         self.send_message(converted_message)
+
                 except ValueError as err:
                     self.logger.warning(err)
-                except KeyError as err:
-                    self.logger.warning('No functions for {} yet'.format(str(selected_action)))
+                except errors.ResourceNotFound as err:
+                    self.logger.warning(err)
                 except KeyboardInterrupt as err:
                     self.shutdown = True
                     self.logger.info('End the code...')
+
         except Exception as err:
             self.logger.error(err)
         finally:
             self.logger.info('Close the connection...')
+
             if self.logger.is_queued:
                 self.logger.stop()
+
             self.server.close()
-            if self.receive_thread.is_alive():
-                self.receive_thread.join()
+
+            if self.receive_process.is_alive():
+                self.receive_process.terminate()
 
     def receive_message(self):
         data = self.receive_headers()
@@ -86,4 +84,3 @@ class Observer(Client):
                 self.logger.info(self.get_pretty_string(message))
             else:
                 self.logger.error('Error {}'.format(result))
-
