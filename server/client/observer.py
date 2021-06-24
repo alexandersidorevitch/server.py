@@ -1,4 +1,4 @@
-from multiprocessing import Lock, Process
+from threading import Lock, Thread
 
 import errors
 from client.client import Client
@@ -9,7 +9,7 @@ from defs import Action, Result
 class Observer(Client):
     def __init__(self, address=CONFIG.SERVER_ADDR, port=CONFIG.SERVER_PORT, log_level='INFO'):
         super().__init__(address=address, port=port, level=log_level)
-        self.receive_process = Process(target=self.receive_notification)
+        self.receive_process = Thread(target=self.receive_notification)
         self._receive_lock = Lock()
         self.shutdown = False
         self.ACTION_DICT = {
@@ -63,7 +63,7 @@ class Observer(Client):
             self.server.close()
 
             if self.receive_process.is_alive():
-                self.receive_process.terminate()
+                self.receive_process.join()
 
     def receive_message(self):
         data = self.receive_headers()
