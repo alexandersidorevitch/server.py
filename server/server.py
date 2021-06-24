@@ -4,7 +4,7 @@ import json
 import socket
 from functools import wraps
 from socketserver import ThreadingTCPServer, BaseRequestHandler
-from threading import Thread
+from multiprocessing import Process
 
 from invoke import task
 
@@ -82,7 +82,7 @@ class GameServerRequestHandler(BaseRequestHandler):
                 self.game.remove_player(self.player)
             if self.observer is not None:
                 self.game.remove_observer(self.observer)
-                self._observer_notification_thread.join()
+                self._observer_notification_thread.terminate()
             if not self.observer:
                 game_db.add_action(self.game_idx, Action.LOGOUT, player_idx=self.player.idx)
         self.HANDLERS.pop(id(self))
@@ -281,7 +281,7 @@ class GameServerRequestHandler(BaseRequestHandler):
         else:
             self.observer = Observer()
             message = self.observer.games_to_json_str()
-            self._observer_notification_thread = Thread(target=self._observer_notification)
+            self._observer_notification_thread = Process(target=self._observer_notification)
             self._observer_notification_thread.start()
             return Result.OKEY, message
 
