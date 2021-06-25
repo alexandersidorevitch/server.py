@@ -65,7 +65,6 @@ class Game(Thread):
         self._lock = Lock()
         self._stop_event = Event()
         self._start_tick_event = Event()
-        self.tick_done_event = Event()
         self._tick_done_condition = Condition()
         random.seed()
 
@@ -829,18 +828,19 @@ class Game(Thread):
                     'armor': player.town.armor,
                     'level': player.town.level,
                     'event': player.town.events[-1] if len(player.town.events) else None
-                }
+                },
+                'trains': [
+                    {
+                        'idx': train.idx,
+                        'goods': train.goods,
+                        'goods_type': train.goods_type,
+                        'level': train.level
+                    }
+                    for train in filter(lambda train: train.player_idx == player.idx,
+                                        self.trains.values())
+                ]
             }
             for player in self.players.values()
-        ]
-        trains_list = [
-            {
-                'idx': train.idx,
-                'goods': train.goods,
-                'goods_type': train.goods_type,
-                'level': train.level
-            }
-            for train in self.trains.values()
         ]
         storages_list = [
             {
@@ -861,7 +861,6 @@ class Game(Thread):
         message = Serializable()
         message.set_attributes(
             players=players_list,
-            trains=trains_list,
             storages=storages_list,
             markets=markets_list
         )

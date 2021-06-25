@@ -65,7 +65,7 @@ class GameServerRequestHandler(BaseRequestHandler):
             try:
                 if self.observer.game:
                     log.debug('TICK!', game=self.observer.game)
-                    if self.observer.game.tick_done_event.wait(CONFIG.TURN_TIMEOUT):
+                    if self.observer.game._start_tick_event.wait(CONFIG.TURN_TIMEOUT):
                         self.write_response(Result.OKEY, self.observer.game.message_for_observer())
                         log.debug('DONE TICK!', game=self.observer.game)
             except OSError:
