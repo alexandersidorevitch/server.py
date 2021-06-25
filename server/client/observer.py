@@ -58,9 +58,12 @@ class Observer(Client):
             self.logger.info('Close the connection...')
 
             if self.logger.is_queued:
+                self.logger.info('Close the logger...')
                 self.logger.stop()
 
+            self.logger.info('Close the server...')
             self.server.close()
+            self.logger.info('Close the thread...')
 
             if self.receive_process.is_alive():
                 self.receive_process.join(CONFIG.TURN_TIMEOUT)
