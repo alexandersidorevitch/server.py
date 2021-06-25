@@ -34,14 +34,14 @@ class Observer(Client):
                 try:
                     selected_action = Action(int(input()))
 
-                    with self._receive_lock:
-                        if selected_action not in self.ACTION_DICT:
-                            raise errors.ResourceNotFound(
-                                'Functions for {} are not implemented yet'.format(str(selected_action)))
+                    if selected_action not in self.ACTION_DICT:
+                        raise errors.ResourceNotFound(
+                            'Functions for {} are not implemented yet'.format(str(selected_action)))
 
-                        method = self.ACTION_DICT[selected_action]
-                        message = method()
-                        converted_message = self.convert_message(selected_action, message)
+                    method = self.ACTION_DICT[selected_action]
+                    message = method()
+                    converted_message = self.convert_message(selected_action, message)
+                    with self._receive_lock:
                         self.send_message(converted_message)
 
                 except ValueError as err:
