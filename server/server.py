@@ -83,7 +83,7 @@ class GameServerRequestHandler(BaseRequestHandler):
                 self.game.remove_player(self.player)
             if self.observer is not None:
                 self.game.remove_observer(self.observer)
-                self._observer_notification_thread.join()
+                self._observer_notification_thread.join(CONFIG.TURN_TIMEOUT)
             if not self.observer:
                 game_db.add_action(self.game_idx, Action.LOGOUT, player_idx=self.player.idx)
         self.HANDLERS.pop(id(self))

@@ -63,7 +63,7 @@ class Observer(Client):
             self.server.close()
 
             if self.receive_process.is_alive():
-                self.receive_process.join()
+                self.receive_process.join(CONFIG.TURN_TIMEOUT)
 
     def receive_message(self):
         data = self.receive_headers()
