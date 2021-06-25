@@ -187,7 +187,7 @@ class Game(Thread):
             if self.num_players == len(self.players) and self.num_observers == len(
                     self.observers) and self.state == GameState.INIT:
                 self.start()
-        log.info('New observer has been connected to the game, observer: {}'.format(observer), game=self)
+        log.info('New observer has been connected to the game, observer: {!r}'.format(observer), game=self)
 
     def remove_player(self, player: Player):
         """ Removes player from the game.

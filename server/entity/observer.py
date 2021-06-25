@@ -208,6 +208,9 @@ class Observer(object):
         message = self.games_to_json_str()
         return Result.OKEY, message
 
+    def __repr__(self):
+        return '<Observer Game:{!r}>'.format(self.game)
+
     ACTION_MAP = {
         Action.MAP: on_get_map,
         Action.TURN: on_turn,
