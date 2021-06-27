@@ -259,7 +259,7 @@ class GameServerRequestHandler(BaseRequestHandler):
     ADDITIONAL_FUNCTION = {
         ServerPlayer: (),
         ServerObserver: (
-            AdditionalFunc(_observer_notification, _stop_observer_notification),
+            AdditionalFunc(_start_observer_notification, _stop_observer_notification),
         ),
     }
 
