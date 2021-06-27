@@ -134,8 +134,13 @@ class GameServerRequestHandler(BaseRequestHandler):
                     raise errors.BadCommand('The command\'s payload is not a dictionary')
 
                 if self.server_role is None:
+                    log.debug('1 {}'.format(self.class_name))
                     self.create_role_by_login_action()
-                log.debug('{}'.format(self.class_name))
+                    log.debug('2 {}'.format(self.class_name))
+                else:
+                    log.debug('4 {}'.format(self.class_name))
+
+                log.debug('3 {}'.format(self.class_name))
                 self.write_response(*self.server_role.action(self.action, data))
 
                 if self.action in self.REPLAY_ACTIONS and self.server_role.save_to_db:
