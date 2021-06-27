@@ -12,12 +12,8 @@ class ServerRole:
     }
 
     def __init__(self, *args, **kwargs):
+        self.class_name = self.__class__.__name__.upper()
         self.__check_attributes()
-
-    @classmethod
-    @property
-    def class_name(cls):
-        return cls.__name__.upper()
 
     @staticmethod
     def check_keys(data: dict, keys, aggregate_func=all):
