@@ -3,8 +3,9 @@
 import json
 import socket
 from functools import wraps
-from socketserver import ThreadingTCPServer, BaseRequestHandler
+from socketserver import BaseRequestHandler, ThreadingTCPServer
 from threading import Thread
+from typing import Any, Callable, NoReturn
 
 from invoke import task
 
@@ -17,12 +18,26 @@ from entity.observer import Observer
 from entity.player import Player
 from entity.serializable import Serializable
 from logger import log
+from entity.server_entity.server_observer import ServerObserver
+from entity.server_entity.server_player import ServerPlayer
+
+
+class AdditionalFunc:
+    def __init__(self, start_function: Callable[[Any], NoReturn], stop_function: Callable[[Any], NoReturn]):
+        self.__start_function = start_function
+        self.__stop_function = stop_function
+
+    def start(self, *args, **kwargs):
+        self.__start_function(*args, **kwargs)
+
+    def stop(self, *args, **kwargs):
+        self.__stop_function(*args, **kwargs)
 
 
 def login_required(func):
     @wraps(func)
     def wrapped(self, *args, **kwargs):
-        if self.game is None or self.player is None:
+        if self.game is None or self._player is None:
             raise errors.AccessDenied('Login required')
         else:
             return func(self, *args, **kwargs)
@@ -41,7 +56,7 @@ class GameServerRequestHandler(BaseRequestHandler):
         self.player = None
         self.game = None
         self.game_idx = None
-        self.observer = None
+        self.server_role = None
         self.closed = None
         self._observer_notification_thread = None
         super(GameServerRequestHandler, self).__init__(*args, **kwargs)
@@ -61,15 +76,22 @@ class GameServerRequestHandler(BaseRequestHandler):
 
     def _observer_notification(self):
         while not self.closed and not (
-                self.observer.game is not None and self.observer.game.state == GameState.FINISHED):
+                self.server_role.game is not None and self.server_role.game.state == GameState.FINISHED):
             try:
-                if self.observer.game:
-                    log.debug('TICK!', game=self.observer.game)
-                    if self.observer.game._start_tick_event.wait(CONFIG.TURN_TIMEOUT):
-                        self.write_response(Result.OKEY, self.observer.game.message_for_observer())
-                        log.debug('DONE TICK!', game=self.observer.game)
+                if self.server_role.game:
+                    log.debug('TICK!', game=self.server_role.game)
+                    if self.server_role.game._start_tick_event.wait(CONFIG.TURN_TIMEOUT):
+                        self.write_response(Result.OKEY, self.server_role.game.message_for_observer())
+                        log.debug('DONE TICK!', game=self.server_role.game)
             except OSError:
                 break
+
+    def _start_observer_notification(self):
+        self._observer_notification_thread = Thread(target=self._observer_notification)
+        self._observer_notification_thread.start()
+
+    def _stop_observer_notification(self):
+        self._observer_notification_thread.join(CONFIG.TURN_TIMEOUT)
 
     @staticmethod
     def shutdown_all_sockets():
@@ -79,13 +101,11 @@ class GameServerRequestHandler(BaseRequestHandler):
     def finish(self):
         log.warn('Connection from {} lost'.format(self.client_address), game=self.game)
         if self.game is not None:
-            if self.player is not None and self.player.in_game:
-                self.game.remove_player(self.player)
-            if self.observer is not None:
-                self.game.remove_observer(self.observer)
-                self._observer_notification_thread.join(CONFIG.TURN_TIMEOUT)
-            if not self.observer:
-                game_db.add_action(self.game_idx, Action.LOGOUT, player_idx=self.player.idx)
+            if self.server_role is not None:
+                self.game.remove_instance(self.server_role)
+                self.stop_additional_functions()
+            if self.server_role.save_to_db:
+                game_db.add_action(self.game_idx, Action.LOGOUT, player_idx=self.server_role.instance.idx)
         self.HANDLERS.pop(id(self))
 
     def data_received(self, data):
@@ -102,17 +122,15 @@ class GameServerRequestHandler(BaseRequestHandler):
                 data = json.loads(self.message)
                 if not isinstance(data, dict):
                     raise errors.BadCommand('The command\'s payload is not a dictionary')
-                if self.observer:
-                    self.write_response(*self.observer.action(self.action, data))
-                else:
-                    if self.action not in self.ACTION_MAP or self.action in CONFIG.HIDDEN_COMMANDS:
-                        raise errors.BadCommand('No such action: {}'.format(self.action))
-                    method = self.ACTION_MAP[self.action]
-                    result, message = method(self, data)
-                    self.write_response(result, message)
 
-                    if not self.observer and self.action in self.REPLAY_ACTIONS:
-                        game_db.add_action(self.game_idx, self.action, message=data, player_idx=self.player.idx)
+                if self.server_role is None:
+                    self.create_role_by_login_action()
+
+                self.write_response(*self.server_role.action(self.action, data))
+
+                if self.action in self.REPLAY_ACTIONS and self.server_role.save_to_db:
+                    game_db.add_action(self.game_idx, self.action, message=data,
+                                       player_idx=self.server_role.instance.idx)
 
             # Handle errors:
             except (json.decoder.JSONDecodeError, errors.BadCommand) as err:
@@ -183,125 +201,46 @@ class GameServerRequestHandler(BaseRequestHandler):
             response_msg = None
         self.write_response(result, response_msg)
 
-    @staticmethod
-    def check_keys(data: dict, keys, agg_func=all):
-        if not agg_func([k in data for k in keys]):
-            raise errors.BadCommand(
-                'The command\'s payload does not contain all needed keys, '
-                'following keys are expected: {}'.format(keys)
-            )
-        else:
-            return True
+    def get_role_by_login_action(self):
+        for role in self.ROLES:
+            if self.action == role.LOGIN_ACTION:
+                return role
+        return None
 
-    def on_login(self, data: dict):
-        if self.game is not None or self.player is not None:
-            raise errors.BadCommand('You are already logged in')
+    def create_role_by_login_action(self):
+        server_role = self.get_role_by_login_action()
+        if server_role is None:
+            return errors.ResourceNotFound('No any server roles with login action {}'.format(self.action.name))
+        self.server_role = server_role()
+        self.start_additional_functions()
 
-        self.check_keys(data, ['name'])
-        player_name = data['name']
-        password = data.get('password', None)
+    def start_additional_functions(self):
+        for role, functions in self.ADDITIONAL_FUNCTION.items():
+            if isinstance(self.server_role, role):
+                for function in functions:
+                    function.start(self)
+                break
 
-        player = Player.get(player_name, password=password)
-        if not player.check_password(password):
-            raise errors.AccessDenied('Password mismatch')
+    def stop_additional_functions(self):
+        for role, functions in self.ADDITIONAL_FUNCTION.items():
+            if isinstance(self.server_role, role):
+                for function in functions:
+                    function.stop(self)
+                break
 
-        game_name = data.get('game', 'Game of {}'.format(player_name))
-        num_players = data.get('num_players', CONFIG.DEFAULT_NUM_PLAYERS)
-        num_turns = data.get('num_turns', CONFIG.DEFAULT_NUM_TURNS)
-        num_observers = data.get('num_observers', CONFIG.DEFAULT_NUM_OBSERVERS)
-
-        game = Game.get(game_name, num_players=num_players, num_turns=num_turns, num_observers=num_observers)
-
-        game.check_state(GameState.INIT, GameState.RUN)
-        player = game.add_player(player)
-        self.game = game
-        self.game_idx = game.game_idx
-        self.player = player
-
-        log.info('Player successfully logged in: {}'.format(player), game=self.game)
-        message = self.player.to_json_str()
-
-        return Result.OKEY, message
-
-    @login_required
-    def on_logout(self, _):
-        if self.observer:
-            log.info('Logout observer', game=self.game)
-            self.game.remove_observer(self.observer)
-        else:
-            self.game.remove_player(self.player)
-            log.info('Logout player: {}'.format(self.player.name), game=self.game)
-        self.closed = True
-        return Result.OKEY, None
-
-    @login_required
-    def on_get_map(self, data: dict):
-        self.check_keys(data, ['layer'])
-        message = self.game.get_map_layer(self.player, data['layer'])
-        return Result.OKEY, message
-
-    @login_required
-    def on_move(self, data: dict):
-        self.check_keys(data, ['train_idx', 'speed', 'line_idx'])
-        self.game.check_state(GameState.RUN)
-        with self.player.lock:
-            self.game.move_train(self.player, data['train_idx'], data['speed'], data['line_idx'])
-        return Result.OKEY, None
-
-    @login_required
-    def on_turn(self, _):
-        self.game.check_state(GameState.RUN)
-        self.game.turn(self.player)
-        return Result.OKEY, None
-
-    @login_required
-    def on_upgrade(self, data: dict):
-        self.check_keys(data, ['trains', 'posts'], agg_func=any)
-        self.game.check_state(GameState.RUN)
-        with self.player.lock:
-            self.game.make_upgrade(
-                self.player, posts_idx=data.get('posts', []), trains_idx=data.get('trains', [])
-            )
-        return Result.OKEY, None
-
-    @login_required
-    def on_player(self, _):
-        message = self.player.to_json_str()
-        return Result.OKEY, message
-
-    def on_list_games(self, _):
-        games = Serializable()
-        games.set_attributes(
-            games=Game.get_all_active_games()
-        )
-        return Result.OKEY, games.to_json_str()
-
-    def on_observer(self, _):
-        if self.game or self.observer:
-            raise errors.BadCommand('Impossible to connect as observer')
-        else:
-            self.observer = Observer()
-            message = self.observer.games_to_json_str()
-            self._observer_notification_thread = Thread(target=self._observer_notification)
-            self._observer_notification_thread.start()
-            return Result.OKEY, message
-
-    ACTION_MAP = {
-        Action.LOGIN: on_login,
-        Action.LOGOUT: on_logout,
-        Action.MAP: on_get_map,
-        Action.MOVE: on_move,
-        Action.UPGRADE: on_upgrade,
-        Action.TURN: on_turn,
-        Action.PLAYER: on_player,
-        Action.GAMES: on_list_games,
-        Action.OBSERVER: on_observer,
-    }
     REPLAY_ACTIONS = {
         Action.LOGIN,
         Action.LOGOUT,
         Action.MOVE,
         Action.UPGRADE,
+    }
+    ROLES = {
+        ServerPlayer,
+        ServerObserver
+    }
+    ADDITIONAL_FUNCTION = {
+        ServerPlayer: (),
+        ServerObserver: (AdditionalFunc(_observer_notification, _stop_observer_notification),),
     }
 
 
