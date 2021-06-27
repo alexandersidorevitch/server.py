@@ -225,6 +225,7 @@ class GameServerRequestHandler(BaseRequestHandler):
         if server_role is None:
             return errors.ResourceNotFound('No any server roles with login action {}'.format(self.action.name))
         self.server_role = server_role()
+        log.debug('{}'.format(self.server_role.LOGIN_ACTION))
         self.start_additional_functions()
 
     def start_additional_functions(self):
