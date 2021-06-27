@@ -54,7 +54,7 @@ class ServerPlayer(ServerRole):
         game = Game.get(game_name, num_players=num_players, num_turns=num_turns, num_observers=num_observers)
 
         game.check_state(GameState.INIT, GameState.RUN)
-        player = game.add_instance(player)
+        player = game.add_player(player)
         self.game = game
         self._player = player
 
