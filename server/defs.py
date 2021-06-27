@@ -4,23 +4,25 @@ from enum import IntEnum
 
 
 class Action(IntEnum):
-    """ Client commands.
+    """ Only Client commands.
     """
-    LOGIN = 1
-    LOGOUT = 2
-    MOVE = 3
-    UPGRADE = 4
-    TURN = 5
-    PLAYER = 6
-    GAMES = 7
-    MAP = 10
+    MOVE = 1
+    UPGRADE = 2
+    PLAYER = 3
+    TURN = 4
+
+    # Clients and Observers actions
+    LOGIN = 101
+    LOGOUT = 102
+    GAMES = 107
+    MAP = 110
 
     # Observer actions:
-    OBSERVER = 100
-    GAME = 101
+    OBSERVER_LOGIN = 200
+    GAME = 201
 
     # This actions are not available for client:
-    EVENT = 102
+    EVENT = 202
 
 
 class Result(IntEnum):
