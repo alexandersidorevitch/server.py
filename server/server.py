@@ -52,13 +52,11 @@ class GameServerRequestHandler(BaseRequestHandler):
         self.message = None
         self.data = None
         self.server_role = None
-        self.closed = None
         self._observer_notification_thread = None
         super(GameServerRequestHandler, self).__init__(*args, **kwargs)
 
     def setup(self):
         log.info('New connection from {}'.format(self.client_address))
-        self.closed = False
         self.HANDLERS[id(self)] = self
 
     def handle(self):
@@ -67,17 +65,17 @@ class GameServerRequestHandler(BaseRequestHandler):
             if data:
                 self.data_received(data)
             else:
-                self.closed = True
+                break
 
     def _observer_notification(self):
         while not self.closed and not (
-                self.server_role.game is not None and self.server_role.game.state == GameState.FINISHED):
+                self.game is not None and self.server_role.game.state == GameState.FINISHED):
             try:
-                if self.server_role.game:
-                    log.debug('TICK!', game=self.server_role.game)
+                if self.game:
+                    log.debug('TICK!', game=self.game)
                     if self.server_role.game._start_tick_event.wait(CONFIG.TURN_TIMEOUT):
-                        self.write_response(Result.OKEY, self.server_role.game.message_for_observer())
-                        log.debug('DONE TICK!', game=self.server_role.game)
+                        self.write_response(Result.OKEY, self.game.message_for_observer())
+                        log.debug('DONE TICK!', game=self.game)
             except OSError:
                 break
 
@@ -103,16 +101,22 @@ class GameServerRequestHandler(BaseRequestHandler):
     def class_name(self):
         return self.server_role.class_name
 
+    @property
+    @default_property(False)
+    def closed(self):
+        return self.server_role.close_connection
+
     def finish(self):
         log.warn('Connection from {} lost'.format(self.client_address),
                  game=self.game)
         if self.server_role is not None:
-            if self.game is not None and self.server_role.instance is not None:
-                self.game.remove_instance(self.server_role.instance)
+            if self.game is not None:
+                if self.server_role.instance is not None:
+                    self.game.remove_instance(self.server_role.instance)
+                if self.server_role.save_to_db:
+                    game_db.add_action(self.game.game_idx, Action.LOGOUT,
+                                       player_idx=self.server_role.instance.idx)
             self.stop_additional_functions()
-            if self.server_role.save_to_db:
-                game_db.add_action(self.game.game_idx, Action.LOGOUT,
-                                   player_idx=self.server_role.instance.idx)
         self.HANDLERS.pop(id(self))
 
     def data_received(self, data):

@@ -55,8 +55,10 @@ class ServerPlayer(ServerRole):
 
         game.check_state(GameState.INIT, GameState.RUN)
         player = game.add_player(player)
+
         self.game = game
         self._player = player
+        self.close_connection = False
 
         log.info('Player successfully logged in: {}'.format(player), game=self.game)
         message = self._player.to_json_str()
