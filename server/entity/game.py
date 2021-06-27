@@ -13,6 +13,7 @@ from defs import Action
 from entity.event import Event as GameEvent, EventType
 from entity.map import Map
 from entity.player import Player
+from entity.observer import Observer
 from entity.point import Point
 from entity.post import Post, PostType
 from entity.train import Train
@@ -32,7 +33,7 @@ class Game(Thread):
     GAMES = {}  # All registered games.
 
     def __init__(
-            self, name, observed=False, map_name=None,
+            self, name, map_name=None,
             num_players=CONFIG.DEFAULT_NUM_PLAYERS, num_turns=CONFIG.DEFAULT_NUM_TURNS,
             num_observers=CONFIG.DEFAULT_NUM_OBSERVERS
     ):
@@ -41,7 +42,6 @@ class Game(Thread):
         self.name = name
         self.state = GameState.INIT
         self.current_tick = 0
-        self.observed = observed
         self.num_players = num_players
         self.num_turns = num_turns
         self.num_observers = num_observers
@@ -51,12 +51,10 @@ class Game(Thread):
                 'Unable to create game with {} players, maximum players count is {}'.format(
                     self.num_players, len(self.map.towns))
             )
-        if self.observed:
-            self.game_idx = 0
-        else:
-            self.game_idx = game_db.add_game(
-                name, self.map.idx, num_players=num_players, num_turns=num_turns, num_observers=num_observers
-            )
+
+        self.game_idx = game_db.add_game(
+            name, self.map.idx, num_players=num_players, num_turns=num_turns, num_observers=num_observers
+        )
         self.players = {}
         self.trains = {}
         self.next_train_moves = {}
@@ -88,22 +86,31 @@ class Game(Thread):
         return game
 
     @staticmethod
-    def get_all_active_games():
+    def get_all_active_games_attributes():
         """ Returns parameters of all non-finished games.
         """
-        games = []
-        for game in Game.GAMES.values():
-            if game.state != GameState.FINISHED:
-                games.append(
-                    {
-                        'name': game.name,
-                        'num_players': game.num_players,
-                        'num_turns': game.num_turns,
-                        'num_observers': game.num_observers,
-                        'state': game.state,
-                    }
-                )
+        games = [
+            {
+                'name': game.name,
+                'num_players': game.num_players,
+                'num_turns': game.num_turns,
+                'num_observers': game.num_observers,
+                'state': game.state,
+            }
+            for game in Game.get_all_active_games()
+        ]
         return games
+
+    @staticmethod
+    def get_all_active_games():
+        """ Returns all non-finished games.
+        """
+        return list(
+            filter(
+                lambda game: game.state != GameState.FINISHED,
+                Game.GAMES.values()
+            )
+        )
 
     @staticmethod
     def stop_all_games():
@@ -173,20 +180,20 @@ class Game(Thread):
 
         return player
 
-    def add_observer(self, observer):
+    def add_observer(self, observer: Observer):
         """ Adds observer to the game.
         """
-        # Add new observer to the game:
         with self._lock:
             if self.num_observers == len(self.observers):
                 raise errors.AccessDenied('The maximum number of observers reached')
 
-            self.observers[id(observer)] = observer
+            self.observers[observer.idx] = observer
             # Start thread with game loop:
             if self.num_players == len(self.players) and self.num_observers == len(
                     self.observers) and self.state == GameState.INIT:
                 self.start()
         log.info('New observer has been connected to the game, observer: {!r}'.format(observer), game=self)
+        return observer
 
     def remove_player(self, player: Player):
         """ Removes player from the game.
@@ -194,10 +201,22 @@ class Game(Thread):
         player.in_game = False
         self.delete_if_no_players()
 
-    def remove_observer(self, observer):
+    def remove_observer(self, observer: Observer):
         """ Removes observer from the game.
         """
         self.observers.pop(observer)
+
+    def remove_instance(self, instance):
+        remove_functions = {
+            Player: self.remove_player,
+            Observer: self.remove_observer
+        }
+        for instance_class, remove_function in remove_functions.items():
+            if isinstance(instance, instance_class):
+                remove_function(instance)
+                break
+        else:
+            raise errors.ResourceNotFound('No any function to remove instance')
 
     def turn(self, player: Player):
         """ Makes next turn.
@@ -224,8 +243,7 @@ class Game(Thread):
         log.info('Finishing game', game=self)
         self.state = GameState.FINISHED
         self._stop_event.set()
-        if not self.observed:
-            game_db.update_game_data(self.game_idx, self.map.ratings)
+        game_db.update_game_data(self.game_idx, self.map.ratings)
 
     def delete(self):
         """ Stops and deletes the game.
@@ -275,8 +293,6 @@ class Game(Thread):
                     player.turn_called = False
                 log.debug('NOTIFY!!!', game=self)
                 self._tick_done_condition.notify_all()
-                if self.tick_done_event.is_set():
-                    self.tick_done_event.clear()
 
     def tick(self):
         """ Makes game tick. Updates dynamic game entities.
@@ -297,13 +313,10 @@ class Game(Thread):
         self.recalculate_ratings_on_tick()
         self.retire_events_on_tick()
 
-        if not self.observed:
-            game_db.add_action(self.game_idx, Action.TURN)
+        game_db.add_action(self.game_idx, Action.TURN)
 
         if 1 <= self.num_turns <= self.current_tick:
             self.finish()
-
-        self.tick_done_event.set()
 
     def train_in_point(self, train: Train, point_idx: int):
         """ Makes all needed actions when Train arrives to Point.
@@ -511,14 +524,13 @@ class Game(Thread):
             player.town.events.append(event)
         self.event_cooldowns[EventType.HIJACKERS_ASSAULT] = round(
             hijackers_power * CONFIG.HIJACKERS_COOLDOWN_COEFFICIENT)
-        if not self.observed:
-            game_db.add_action(self.game_idx, Action.EVENT, event.to_dict())
+        game_db.add_action(self.game_idx, Action.EVENT, event.to_dict())
 
     def hijackers_assault_on_tick(self):
         """ Makes randomly hijackers assault if it is possible.
         """
         # Check cooldown for this Event:
-        if self.event_cooldowns.get(EventType.HIJACKERS_ASSAULT, 0) > 0 or self.observed:
+        if self.event_cooldowns.get(EventType.HIJACKERS_ASSAULT, 0) > 0:
             return
 
         rand_percent = random.randint(1, 100)
@@ -536,14 +548,13 @@ class Game(Thread):
             player.town.events.append(event)
         self.event_cooldowns[EventType.PARASITES_ASSAULT] = round(
             parasites_power * CONFIG.PARASITES_COOLDOWN_COEFFICIENT)
-        if not self.observed:
-            game_db.add_action(self.game_idx, Action.EVENT, event.to_dict())
+        game_db.add_action(self.game_idx, Action.EVENT, event.to_dict())
 
     def parasites_assault_on_tick(self):
         """ Makes randomly parasites assault if it is possible.
         """
         # Check cooldown for this Event:
-        if self.event_cooldowns.get(EventType.PARASITES_ASSAULT, 0) > 0 or self.observed:
+        if self.event_cooldowns.get(EventType.PARASITES_ASSAULT, 0) > 0:
             return
 
         rand_percent = random.randint(1, 100)
@@ -567,14 +578,13 @@ class Game(Thread):
                 )
         self.event_cooldowns[EventType.REFUGEES_ARRIVAL] = round(
             refugees_number * CONFIG.REFUGEES_COOLDOWN_COEFFICIENT)
-        if not self.observed:
-            game_db.add_action(self.game_idx, Action.EVENT, event.to_dict())
+        game_db.add_action(self.game_idx, Action.EVENT, event.to_dict())
 
     def refugees_arrival_on_tick(self):
         """ Makes randomly refugees arrival if it is possible.
         """
         # Check cooldown for this Event:
-        if self.event_cooldowns.get(EventType.REFUGEES_ARRIVAL, 0) > 0 or self.observed:
+        if self.event_cooldowns.get(EventType.REFUGEES_ARRIVAL, 0) > 0:
             return
 
         rand_percent = random.randint(1, 100)
@@ -772,13 +782,13 @@ class Game(Thread):
     def get_map_layer(self, player, layer):
         """ Returns specified game map layer.
         """
-        if layer not in self.map.LAYERS or (layer in CONFIG.HIDDEN_MAP_LAYERS and not self.observed):
+        if layer not in self.map.LAYERS or (layer in CONFIG.HIDDEN_MAP_LAYERS):
             raise errors.ResourceNotFound('Map layer not found, layer: {}'.format(layer))
 
         log.debug('Load game map layer, layer: {}'.format(layer), game=self)
         message = self.map.layer_to_json_str(layer)
 
-        if layer == 1 and not self.observed:
+        if layer == 1:
             self.clean_user_events(player)
 
         return message
