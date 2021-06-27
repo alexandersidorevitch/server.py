@@ -32,17 +32,6 @@ class AdditionalFunc:
         self.__stop_function(*args, **kwargs)
 
 
-def login_required(func):
-    @wraps(func)
-    def wrapped(self, *args, **kwargs):
-        if self.server_role.game is None or self._player is None:
-            raise errors.AccessDenied('Login required')
-        else:
-            return func(self, *args, **kwargs)
-
-    return wrapped
-
-
 class GameServerRequestHandler(BaseRequestHandler):
     HANDLERS = {}
 
@@ -93,14 +82,19 @@ class GameServerRequestHandler(BaseRequestHandler):
         for handler in GameServerRequestHandler.HANDLERS.values():
             handler.request.shutdown(socket.SHUT_RDWR)
 
+    @property
+    def game(self):
+        return self.server_role.game if self.server_role is not None else None
+
     def finish(self):
-        log.warn('Connection from {} lost'.format(self.client_address), game=self.server_role.game)
+        log.warn('Connection from {} lost'.format(self.client_address),
+                 game=self.game)
         if self.server_role is not None:
-            if self.server_role.game is not None:
-                self.server_role.game.remove_instance(self.server_role)
+            if self.game is not None:
+                self.game.remove_instance(self.server_role)
             self.stop_additional_functions()
             if self.server_role.save_to_db:
-                game_db.add_action(self.server_role.game.game_idx, Action.LOGOUT,
+                game_db.add_action(self.game.game_idx, Action.LOGOUT,
                                    player_idx=self.server_role.instance.idx)
         self.HANDLERS.pop(id(self))
 
@@ -110,11 +104,11 @@ class GameServerRequestHandler(BaseRequestHandler):
             self.data = None
 
         if self.parse_data(data):
-            log.info('[REQUEST] {!s}: {}, action: {!r}, message:\n{}'.format(
+            log.info('[REQUEST] {}: {}, action: {!r}, message:\n{}'.format(
                 self.server_role.class_name if self.server_role is not None else 'Connection',
                 self.server_role.instance.idx if self.server_role is not None else self.client_address,
                 Action(self.action), self.message),
-                game=self.server_role.game if self.server_role is not None else None)
+                game=self.game)
 
             try:
                 data = json.loads(self.message)
@@ -127,7 +121,7 @@ class GameServerRequestHandler(BaseRequestHandler):
                 self.write_response(*self.server_role.action(self.action, data))
 
                 if self.action in self.REPLAY_ACTIONS and self.server_role.save_to_db:
-                    game_db.add_action(self.server_role.game.game_idx, self.action, message=data,
+                    game_db.add_action(self.game.game_idx, self.action, message=data,
                                        player_idx=self.server_role.instance.idx)
 
             # Handle errors:
@@ -143,7 +137,7 @@ class GameServerRequestHandler(BaseRequestHandler):
                 self.error_response(Result.RESOURCE_NOT_FOUND, err)
             except Exception:
                 log.exception('Got unhandled exception on client command execution',
-                              game=self.server_role.game if self.server_role is not None else None)
+                              game=self.game)
                 self.error_response(Result.INTERNAL_SERVER_ERROR)
             finally:
                 self.action = None
@@ -186,7 +180,7 @@ class GameServerRequestHandler(BaseRequestHandler):
             self.server_role.class_name,
             self.server_role.instance.idx if self.server_role is not None and self.server_role.instance is not None else
             self.client_address,
-            result, resp_message), game=self.server_role.game if self.server_role is not None else None)
+            result, resp_message), game=self.game)
         self.request.sendall(result.to_bytes(CONFIG.RESULT_HEADER, byteorder='little'))
         self.request.sendall(len(resp_message).to_bytes(CONFIG.MSGLEN_HEADER, byteorder='little'))
         self.request.sendall(resp_message.encode('utf-8'))
@@ -194,7 +188,7 @@ class GameServerRequestHandler(BaseRequestHandler):
     def error_response(self, result, exception=None):
         if exception is not None:
             str_exception = str(exception)
-            log.error(str_exception, game=self.server_role.game if self.server_role is not None else None)
+            log.error(str_exception, game=self.game)
             error = Serializable()
             error.set_attributes(error=str_exception)
             response_msg = error.to_json_str()
