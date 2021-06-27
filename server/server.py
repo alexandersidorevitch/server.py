@@ -123,10 +123,11 @@ class GameServerRequestHandler(BaseRequestHandler):
 
                 if self.server_role is None:
                     self.create_role_by_login_action()
-
+                log.debug(
+                    '{} {!r} {} {} {!r}'.format(self.server_role, self.server_role.game, self.server_role.class_name,
+                                                self.server_role.instance.name, self.action))
                 self.write_response(*self.server_role.action(self.action, data))
-                log.debug('{} {!r} {} {} {!r}'.format(self.server_role, self.server_role.game, self.server_role.class_name,
-                                               self.server_role.instance.name, self.action))
+
                 if self.action in self.REPLAY_ACTIONS and self.server_role.save_to_db:
                     game_db.add_action(self.server_role.game, self.action, message=data,
                                        player_idx=self.server_role.instance.idx)
@@ -211,7 +212,9 @@ class GameServerRequestHandler(BaseRequestHandler):
         server_role = self.get_role_by_login_action()
         if server_role is None:
             return errors.ResourceNotFound('No any server roles with login action {}'.format(self.action.name))
+        log.debug('Add role')
         self.server_role = server_role()
+        log.debug('{}'.format(self.server_role))
         self.start_additional_functions()
 
     def start_additional_functions(self):
