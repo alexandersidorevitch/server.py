@@ -20,15 +20,17 @@ from logger import log
 
 
 class AdditionalFunc:
-    def __init__(self, start_function: Callable[[Any], None], stop_function: Callable[[Any], None]):
+    def __init__(self, start_function: Callable[[Any], None] = None, stop_function: Callable[[Any], None] = None):
         self.__start_function = start_function
         self.__stop_function = stop_function
 
     def start(self, *args, **kwargs):
-        self.__start_function(*args, **kwargs)
+        if self.__start_function is not None:
+            self.__start_function(*args, **kwargs)
 
     def stop(self, *args, **kwargs):
-        self.__stop_function(*args, **kwargs)
+        if self.__stop_function is not None:
+            self.__stop_function(*args, **kwargs)
 
 
 class GameServerRequestHandler(BaseRequestHandler):
@@ -89,8 +91,8 @@ class GameServerRequestHandler(BaseRequestHandler):
         log.warn('Connection from {} lost'.format(self.client_address),
                  game=self.game)
         if self.server_role is not None:
-            if self.game is not None:
-                self.game.remove_instance(self.server_role)
+            if self.game is not None and self.server_role.instance is not None:
+                self.game.remove_instance(self.server_role.instance)
             self.stop_additional_functions()
             if self.server_role.save_to_db:
                 game_db.add_action(self.game.game_idx, Action.LOGOUT,
@@ -236,7 +238,9 @@ class GameServerRequestHandler(BaseRequestHandler):
     }
     ADDITIONAL_FUNCTION = {
         ServerPlayer: (),
-        ServerObserver: (AdditionalFunc(_observer_notification, _stop_observer_notification),),
+        ServerObserver: (
+            AdditionalFunc(_observer_notification, _stop_observer_notification),
+        ),
     }
 
 
