@@ -9,7 +9,7 @@ from defs import Action, Result
 class Observer(Client):
     def __init__(self, address=CONFIG.SERVER_ADDR, port=CONFIG.SERVER_PORT, log_level='INFO'):
         super().__init__(address=address, port=port, level=log_level)
-        self.receive_process = Thread(target=self.receive_notification)
+        self.receive_thread = Thread(target=self.receive_notification)
         self._receive_lock = Lock()
         self.shutdown = False
         self.ACTION_DICT = {
@@ -51,13 +51,12 @@ class Observer(Client):
             value = input()
             if value:
                 message[option] = int(value) if option.startswith('num') else value
-
         return message
 
     def run_server(self):
         try:
             self.server.connect(self.server_address)
-            self.receive_process.start()
+            self.receive_thread.start()
             self.shutdown = False
 
             while not self.shutdown:
@@ -95,8 +94,8 @@ class Observer(Client):
             self.server.close()
             self.logger.info('Close the thread...')
 
-            if self.receive_process.is_alive():
-                self.receive_process.join(CONFIG.TURN_TIMEOUT)
+            if self.receive_thread.is_alive():
+                self.receive_thread.join(CONFIG.TURN_TIMEOUT)
 
     def receive_message(self):
         data = self.receive_headers()
