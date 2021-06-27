@@ -125,7 +125,8 @@ class GameServerRequestHandler(BaseRequestHandler):
                     self.create_role_by_login_action()
 
                 self.write_response(*self.server_role.action(self.action, data))
-
+                log.debug('{} {!r} {} {} {!r}'.format(self.server_role, self.server_role.game, self.server_role.class_name,
+                                               self.server_role.instance.name, self.action))
                 if self.action in self.REPLAY_ACTIONS and self.server_role.save_to_db:
                     game_db.add_action(self.server_role.game, self.action, message=data,
                                        player_idx=self.server_role.instance.idx)
