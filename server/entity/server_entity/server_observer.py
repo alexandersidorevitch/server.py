@@ -67,6 +67,7 @@ class ServerObserver(ServerRole):
         log.info('Logout observer', game=self.game)
         self.game.remove_observer(self._observer)
         self.close_connection = True
+        return Result.OKEY, None
 
     @game_required
     def on_get_map(self, data):
