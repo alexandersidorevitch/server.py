@@ -183,7 +183,8 @@ class GameServerRequestHandler(BaseRequestHandler):
         resp_message = '' if message is None else message
         log.debug('[RESPONSE] {}: {}, result: {!r}, message:\n{}'.format(
             self.server_role.class_name,
-            self.server_role.idx if self.server_role is not None else self.client_address,
+            self.server_role.instance.idx if self.server_role is not None and self.server_role.instance is not None else
+            self.client_address,
             result, resp_message), game=self.server_role.game if self.server_role is not None else None)
         self.request.sendall(result.to_bytes(CONFIG.RESULT_HEADER, byteorder='little'))
         self.request.sendall(len(resp_message).to_bytes(CONFIG.MSGLEN_HEADER, byteorder='little'))
