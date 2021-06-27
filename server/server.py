@@ -112,7 +112,7 @@ class GameServerRequestHandler(BaseRequestHandler):
         if self.parse_data(data):
             log.info('[REQUEST] {!s}: {}, action: {!r}, message:\n{}'.format(
                 self.server_role.class_name if self.server_role is not None else 'Connection',
-                self.server_role.idx if self.server_role is not None else self.client_address,
+                self.server_role.instance.idx if self.server_role is not None else self.client_address,
                 Action(self.action), self.message),
                 game=self.server_role.game if self.server_role is not None else None)
 
