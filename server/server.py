@@ -142,7 +142,8 @@ class GameServerRequestHandler(BaseRequestHandler):
             except errors.ResourceNotFound as err:
                 self.error_response(Result.RESOURCE_NOT_FOUND, err)
             except Exception:
-                log.exception('Got unhandled exception on client command execution', game=self.server_role.game)
+                log.exception('Got unhandled exception on client command execution',
+                              game=self.server_role.game if self.server_role is not None else None)
                 self.error_response(Result.INTERNAL_SERVER_ERROR)
             finally:
                 self.action = None
@@ -193,7 +194,7 @@ class GameServerRequestHandler(BaseRequestHandler):
     def error_response(self, result, exception=None):
         if exception is not None:
             str_exception = str(exception)
-            log.error(str_exception, game=self.server_role.game)
+            log.error(str_exception, game=self.server_role.game if self.server_role is not None else None)
             error = Serializable()
             error.set_attributes(error=str_exception)
             response_msg = error.to_json_str()
