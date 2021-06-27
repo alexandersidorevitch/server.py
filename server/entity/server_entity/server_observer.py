@@ -9,7 +9,7 @@ from entity.observer import Observer
 from entity.serializable import Serializable
 from logger import log
 
-from server_role import ServerRole
+from server_entity.server_role import ServerRole
 
 
 def game_required(func):
