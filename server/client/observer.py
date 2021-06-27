@@ -13,16 +13,46 @@ class Observer(Client):
         self._receive_lock = Lock()
         self.shutdown = False
         self.ACTION_DICT = {
-            Action.OBSERVER: self.on_observer,
-            Action.GAME: self.on_game
+            Action.OBSERVER_LOGIN: self.on_login,
+            Action.LOGOUT: self.on_logout,
+            Action.MAP: self.on_get_map,
+            Action.GAMES: self.on_list_games,
         }
 
-    def on_observer(self):
+    @staticmethod
+    def on_get_map():
         return None
 
-    def on_game(self):
-        self.logger.info('Input game_idx:')
-        return {'idx': int(input())}
+    @staticmethod
+    def on_list_games():
+        return None
+
+    @staticmethod
+    def on_logout():
+        return None
+
+    def on_login(self):
+        self.logger.info('Write your name: ')
+        message = {'name': input()}
+
+        not_required_options = (
+            ('game', 'game’s name (use it to connect to existing game)'),
+            ('num_turns', 'number of game turns to be played, default:'
+                          ' -1 (if num_turns < 1 it means that the game is unlimited)'),
+            ('num_players', 'number of players in the game, default: 1'),
+            ('num_observers', 'number of observers in the game, default: 0'),
+        )
+
+        for option, description in not_required_options:
+            self.logger.info('{} - {}\n'
+                             'Press enter for default value...\n'
+                             '{}'.format(option, description, option.capitalize()))
+
+            value = input()
+            if value:
+                message[option] = int(value) if option.startswith('num') else value
+
+        return message
 
     def run_server(self):
         try:

@@ -12,23 +12,28 @@ class Player(Client):
             Action.LOGOUT: self.on_logout,
             Action.LOGIN: self.on_login,
             Action.TURN: self.on_turn,
-            Action.GAMES: self.on_game,
+            Action.GAMES: self.on_list_games,
             Action.PLAYER: self.on_player,
         }
 
-    def on_turn(self):
+    @staticmethod
+    def on_turn():
         return None
 
-    def on_game(self):
+    @staticmethod
+    def on_list_games():
         return None
 
-    def on_player(self):
+    @staticmethod
+    def on_player():
         return None
 
-    def on_get_map(self):
+    @staticmethod
+    def on_get_map():
         return None
 
-    def on_logout(self):
+    @staticmethod
+    def on_logout():
         return None
 
     def on_get_map(self):

@@ -23,19 +23,24 @@ class Bot(Client):
             Action.PLAYER: self.on_player,
         }
 
-    def on_turn(self):
+    @staticmethod
+    def on_turn():
         return None
 
-    def on_game(self):
+    @staticmethod
+    def on_game():
         return None
 
-    def on_player(self):
+    @staticmethod
+    def on_player():
         return None
 
-    def on_get_map(self):
+    @staticmethod
+    def on_get_map():
         return None
 
-    def on_logout(self):
+    @staticmethod
+    def on_logout():
         return None
 
     def on_get_map(self) -> dict:
