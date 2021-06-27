@@ -33,6 +33,16 @@ class AdditionalFunc:
             self.__stop_function(*args, **kwargs)
 
 
+def default_property(default_value):
+    def wrapped(function):
+        def wrapper(self):
+            return function(self) if self.server_role is not None else default_value
+
+        return wrapper
+
+    return wrapped
+
+
 class GameServerRequestHandler(BaseRequestHandler):
     HANDLERS = {}
 
@@ -84,8 +94,14 @@ class GameServerRequestHandler(BaseRequestHandler):
             handler.request.shutdown(socket.SHUT_RDWR)
 
     @property
+    @default_property(None)
     def game(self):
-        return self.server_role.game if self.server_role is not None else None
+        return self.server_role.game
+
+    @property
+    @default_property('Connection')
+    def class_name(self):
+        return self.server_role.class_name
 
     def finish(self):
         log.warn('Connection from {} lost'.format(self.client_address),
@@ -106,8 +122,9 @@ class GameServerRequestHandler(BaseRequestHandler):
 
         if self.parse_data(data):
             log.info('[REQUEST] {}: {}, action: {!r}, message:\n{}'.format(
-                self.server_role.class_name if self.server_role is not None else 'Connection',
-                self.server_role.instance.idx if self.server_role is not None else self.client_address,
+                self.class_name if self.server_role is not None else 'Connection',
+                self.server_role.instance.idx if self.server_role is not None and self.server_role.instance is not None
+                else self.client_address,
                 Action(self.action), self.message),
                 game=self.game)
 
@@ -178,7 +195,7 @@ class GameServerRequestHandler(BaseRequestHandler):
     def write_response(self, result, message=None):
         resp_message = '' if message is None else message
         log.debug('[RESPONSE] {}: {}, result: {!r}, message:\n{}'.format(
-            self.server_role.class_name,
+            self.class_name,
             self.server_role.instance.idx if self.server_role is not None and self.server_role.instance is not None else
             self.client_address,
             result, resp_message), game=self.game)
@@ -207,9 +224,7 @@ class GameServerRequestHandler(BaseRequestHandler):
         server_role = self.get_role_by_login_action()
         if server_role is None:
             return errors.ResourceNotFound('No any server roles with login action {}'.format(self.action.name))
-        log.debug('Add role')
         self.server_role = server_role()
-        log.debug('{}'.format(self.server_role))
         self.start_additional_functions()
 
     def start_additional_functions(self):
