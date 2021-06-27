@@ -8,7 +8,7 @@ from entity.player import Player
 from entity.serializable import Serializable
 from logger import log
 
-from server_entity.server_role import ServerRole
+from entity.server_entity.server_role import ServerRole
 
 
 def login_required(func):
