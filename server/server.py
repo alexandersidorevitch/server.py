@@ -110,7 +110,7 @@ class GameServerRequestHandler(BaseRequestHandler):
             self.data = None
 
         if self.parse_data(data):
-            log.info('[REQUEST] {}: {}, action: {!r}, message:\n{}'.format(
+            log.info('[REQUEST] {!s}: {}, action: {!r}, message:\n{}'.format(
                 self.server_role.class_name if self.server_role is not None else 'Connection',
                 self.server_role.idx if self.server_role is not None else self.client_address,
                 Action(self.action), self.message),
@@ -127,7 +127,7 @@ class GameServerRequestHandler(BaseRequestHandler):
                 self.write_response(*self.server_role.action(self.action, data))
 
                 if self.action in self.REPLAY_ACTIONS and self.server_role.save_to_db:
-                    game_db.add_action(self.server_role.game, self.action, message=data,
+                    game_db.add_action(self.server_role.game.game_idx, self.action, message=data,
                                        player_idx=self.server_role.instance.idx)
 
             # Handle errors:
