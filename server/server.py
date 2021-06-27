@@ -5,7 +5,7 @@ import socket
 from functools import wraps
 from socketserver import BaseRequestHandler, ThreadingTCPServer
 from threading import Thread
-from typing import Any, Callable, NoReturn
+from typing import Any, Callable
 
 from invoke import task
 
@@ -14,16 +14,14 @@ from config import CONFIG
 from db import game_db
 from defs import Action, Result
 from entity.game import Game, GameState
-from entity.observer import Observer
-from entity.player import Player
 from entity.serializable import Serializable
-from logger import log
 from entity.server_entity.server_observer import ServerObserver
 from entity.server_entity.server_player import ServerPlayer
+from logger import log
 
 
 class AdditionalFunc:
-    def __init__(self, start_function: Callable[[Any], NoReturn], stop_function: Callable[[Any], NoReturn]):
+    def __init__(self, start_function: Callable[[Any], None], stop_function: Callable[[Any], None]):
         self.__start_function = start_function
         self.__stop_function = stop_function
 
@@ -240,7 +238,7 @@ class GameServerRequestHandler(BaseRequestHandler):
     }
     ADDITIONAL_FUNCTION = {
         ServerPlayer: (),
-        ServerObserver: (AdditionalFunc(_observer_notification, _stop_observer_notification),),
+        ServerObserver: (AdditionalFunc(_observer_notification, _stop_observer_notification), ),
     }
 
 
