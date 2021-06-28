@@ -40,4 +40,5 @@ class ServerRole:
                     self.REQUIRED_ATTRIBUTES)
         ):
             raise errors.ResourceNotFound(
-                'You need to implement the following attributes: {}'.format(self.REQUIRED_ATTRIBUTES))
+                'You need to implement {} of the following attributes: {}'.format(aggregate_func.__name__,
+                                                                                  self.REQUIRED_ATTRIBUTES))
