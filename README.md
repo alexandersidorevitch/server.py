@@ -57,3 +57,15 @@ Run client:
 Run client:
     
     $ invoke run-bot -l DEBUG
+
+### Run observer-client 
+
+Run client:
+    
+    $ invoke run-observer -l DEBUG
+
+### Instruction. How operate the client.
+
+1. Choose option from list
+2. Wait an answer
+3. If the output is incorrect, you'll repeat your request  
