@@ -204,7 +204,7 @@ class Game(Thread):
     def remove_observer(self, observer: Observer):
         """ Removes observer from the game.
         """
-        self.observers.pop(observer)
+        self.observers.pop(observer.idx)
 
     def remove_instance(self, instance):
         remove_functions = {
