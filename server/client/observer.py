@@ -1,3 +1,4 @@
+import socket
 from threading import Lock, Thread
 
 import errors
@@ -98,6 +99,7 @@ class Observer(Client):
                 self.logger.stop()
 
             self.logger.info('Close the server...')
+            self.server.shutdown(socket.SHUT_RDWR)
             self.server.close()
             self.logger.info('Close the thread...')
 
