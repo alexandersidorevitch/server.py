@@ -233,18 +233,16 @@ class GameServerRequestHandler(BaseRequestHandler):
         self.start_additional_functions()
 
     def start_additional_functions(self):
-        for role, functions in self.ADDITIONAL_FUNCTION.items():
-            if isinstance(self.server_role, role):
-                for function in functions:
-                    function.start(self)
-                break
+        if type(self.server_role) not in self.ADDITIONAL_FUNCTION:
+            return
+        for function in self.ADDITIONAL_FUNCTION[type(self.server_role)]:
+            function.start(self)
 
     def stop_additional_functions(self):
-        for role, functions in self.ADDITIONAL_FUNCTION.items():
-            if isinstance(self.server_role, role):
-                for function in functions:
-                    function.stop(self)
-                break
+        if type(self.server_role) not in self.ADDITIONAL_FUNCTION:
+            return
+        for function in self.ADDITIONAL_FUNCTION[type(self.server_role)]:
+            function.stop(self)
 
     REPLAY_ACTIONS = {
         Action.LOGIN,
