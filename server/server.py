@@ -78,6 +78,10 @@ class GameServerRequestHandler(BaseRequestHandler):
                     log.debug('DONE TICK!', game=self.game)
             except OSError:
                 break
+        try:
+            self.write_response(Result.OKEY, self.game.message_for_observer())
+        except Exception as err:
+            log.error(err)
 
     def _start_observer_notification(self):
         self._observer_notification_thread = Thread(target=self._observer_notification)
