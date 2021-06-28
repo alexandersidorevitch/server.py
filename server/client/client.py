@@ -39,15 +39,13 @@ class Client(AbstractClient):
                     result, message, data = self.receive_message()
 
                     if result == Result.OKEY:
-                        self.logger.info('Done')
+                        self.logger.info('DONE! Received message: {}'.format(self.get_pretty_string(message)))
                     else:
-                        self.logger.warning('Error {}'.format(result))
+                        self.logger.error('Error {}, message: {}'.format(result.name, self.get_pretty_string(message)))
 
                     if selected_action == Action.LOGIN:
                         self.idx = message.get('idx', self.idx)
 
-                    self.logger.info('Received message: ')
-                    self.logger.info(self.get_pretty_string(message))
                 except ValueError as err:
                     self.logger.warning(err)
                 except KeyError as err:
@@ -97,7 +95,7 @@ class Client(AbstractClient):
         self.logger.info(
             '\n'.join(
                 map(
-                    lambda option: '{}. {}'.format(option, str(option)),
+                    lambda option: '{}. {}'.format(option.value, option.name),
                     self.ACTION_DICT.keys()
                 )
             )
