@@ -29,10 +29,6 @@ class Player(Client):
         return None
 
     @staticmethod
-    def on_get_map():
-        return None
-
-    @staticmethod
     def on_logout():
         return None
 
