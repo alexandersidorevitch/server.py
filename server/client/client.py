@@ -81,7 +81,10 @@ class Client(AbstractClient):
         message = data[CONFIG.MSGLEN_HEADER:]
         while len(message) < message_len:
             message += self.server.recv(CONFIG.RECEIVE_CHUNK_SIZE)
-        return result, json.loads(message.decode('utf-8') or '{}'), message[message_len:]
+        try:
+            return result, json.loads(message.decode('utf-8') or '{}'), message[message_len:]
+        except Exception as err:
+            self.logger.error('{} me: {}'.format(err, message))
 
     def receive_headers(self):
         return self.server.recv(CONFIG.RECEIVE_CHUNK_SIZE)
