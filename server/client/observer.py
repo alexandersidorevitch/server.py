@@ -19,9 +19,16 @@ class Observer(Client):
             Action.GAMES: self.on_list_games,
         }
 
-    @staticmethod
-    def on_get_map():
-        return None
+    def on_get_map(self):
+        self.logger.info(
+            'Layer 0 - static objects: ‘idx’, ‘name’, ‘points’, ‘lines’\n'
+            'Layer 1 - dynamic objects: ‘idx’, ‘posts’, ‘trains’, ‘ratings’\n'
+            'Layer 10 - coordinates of points: ‘idx’, ‘size’, ‘coordinates’\n')
+        self.logger.info('Select layer: ')
+        layer = int(input())
+        if layer not in self.MAP_LAYERS:
+            raise ValueError('No option for {} layer'.format(layer))
+        return {'layer': layer}
 
     @staticmethod
     def on_list_games():
@@ -107,12 +114,10 @@ class Observer(Client):
             self.output_available_options()
             try:
                 result, message, data = self.receive_message()
+                if result == Result.OKEY:
+                    self.logger.info('DONE! Received message: {}'.format(self.get_pretty_string(message)))
+                else:
+                    self.logger.error('Error {}, message: {}'.format(result.name, self.get_pretty_string(message)))
             except OSError:
                 self.shutdown = True
                 break
-            if result == Result.OKEY:
-                self.logger.info('Done')
-                self.logger.info('Received message: ')
-                self.logger.info(self.get_pretty_string(message))
-            else:
-                self.logger.error('Error {}'.format(result))
