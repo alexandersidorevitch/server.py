@@ -84,7 +84,7 @@ class Client(AbstractClient):
         try:
             return result, json.loads(message.decode('utf-8') or '{}'), message[message_len:]
         except Exception as err:
-            self.logger.error('{} me: {}'.format(err, message))
+            self.logger.error('{} me: {} le {},'.format(err, message, message_len))
 
     def receive_headers(self):
         return self.server.recv(CONFIG.RECEIVE_CHUNK_SIZE)
