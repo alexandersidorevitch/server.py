@@ -12,7 +12,7 @@ class ServerRole:
     }
 
     def __init__(self, *args, **kwargs):
-        self.class_name = self.__class__.__name__.upper()
+        self.class_name = self.__class__.__name__
         self.__check_attributes()
 
     @staticmethod
