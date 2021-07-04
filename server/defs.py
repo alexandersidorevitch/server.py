@@ -6,13 +6,13 @@ from enum import IntEnum
 class Action(IntEnum):
     """ Only Client commands.
     """
+    LOGIN = 101
     MOVE = 1
     UPGRADE = 2
     PLAYER = 3
     TURN = 4
 
     # Clients and Observers actions
-    LOGIN = 101
     LOGOUT = 102
     GAMES = 107
     MAP = 110
