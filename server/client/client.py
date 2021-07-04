@@ -72,22 +72,19 @@ class Client(AbstractClient):
         return self.receive_data(data)
 
     def receive_data(self, data):
-        while len(data) < CONFIG.RESULT_HEADER + CONFIG.MSGLEN_HEADER:
-            data += self.server.recv(CONFIG.RECEIVE_CHUNK_SIZE)
-        self.logger.debug('RECEIVED::: {}'.format(data))
         result = Result(int.from_bytes(data[0:CONFIG.ACTION_HEADER], byteorder='little'))
-        data = data[CONFIG.RESULT_HEADER:]
+        data = data[CONFIG.ACTION_HEADER:]
         message_len = int.from_bytes(data[0:CONFIG.MSGLEN_HEADER], byteorder='little')
         message = data[CONFIG.MSGLEN_HEADER:]
         while len(message) < message_len:
             message += self.server.recv(CONFIG.RECEIVE_CHUNK_SIZE)
-        try:
-            return result, json.loads(message.decode('utf-8') or '{}'), message[message_len:]
-        except Exception as err:
-            self.logger.error('{} me: {} le {},'.format(err, message, message_len))
+        return result, json.loads(message.decode('utf-8') or '{}'), message[message_len:]
 
     def receive_headers(self):
-        return self.server.recv(CONFIG.RECEIVE_CHUNK_SIZE)
+        data = b''
+        while len(data) < CONFIG.RESULT_HEADER + CONFIG.MSGLEN_HEADER:
+            data += self.server.recv(CONFIG.RECEIVE_CHUNK_SIZE)
+        return data
 
     def send_message(self, message: bytes) -> None:
         """ Sends a message to the connected server
