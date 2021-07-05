@@ -75,10 +75,12 @@ class Client(AbstractClient):
         result = Result(int.from_bytes(data[0:CONFIG.ACTION_HEADER], byteorder='little'))
         data = data[CONFIG.ACTION_HEADER:]
         message_len = int.from_bytes(data[0:CONFIG.MSGLEN_HEADER], byteorder='little')
-        message = data[CONFIG.MSGLEN_HEADER:]
-        while len(message) < message_len:
-            message += self.server.recv(CONFIG.RECEIVE_CHUNK_SIZE)
-        return result, json.loads(message.decode('utf-8') or '{}'), message[message_len:]
+        data = data[CONFIG.MSGLEN_HEADER:]
+        while len(data) < message_len:
+            data += self.server.recv(CONFIG.RECEIVE_CHUNK_SIZE)
+        message = data[:message_len]
+        data = data[message_len:]
+        return result, json.loads(message.decode('utf-8') or '{}'), data
 
     def receive_headers(self):
         data = b''
