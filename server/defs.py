@@ -1,28 +1,28 @@
 """ Server definitions.
 """
-from enum import IntEnum
+from enum import IntEnum, auto
 
 
 class Action(IntEnum):
     """ Only Client commands.
     """
-    LOGIN = 101
-    MOVE = 1
-    UPGRADE = 2
-    PLAYER = 3
-    TURN = 4
+    LOGIN = auto()
+    MOVE = auto()
+    UPGRADE = auto()
+    PLAYER = auto()
+    TURN = auto()
 
     # Clients and Observers actions
-    LOGOUT = 102
-    GAMES = 107
-    MAP = 110
+    LOGOUT = auto()
+    GAMES = auto()
+    MAP = auto()
 
     # Observer actions:
-    OBSERVER_LOGIN = 200
-    GAME = 201
+    OBSERVER_LOGIN = auto()
+    GAME = auto()
 
     # This actions are not available for client:
-    EVENT = 202
+    EVENT = auto()
 
 
 class Result(IntEnum):
