@@ -6,23 +6,23 @@ from enum import IntEnum, auto
 class Action(IntEnum):
     """ Only Client commands.
     """
-    LOGIN = auto()
-    MOVE = auto()
-    UPGRADE = auto()
-    PLAYER = auto()
-    TURN = auto()
+    LOGIN = 101
+    MOVE = 1
+    UPGRADE = 2
+    PLAYER = 3
+    TURN = 4
 
     # Clients and Observers actions
-    LOGOUT = auto()
-    GAMES = auto()
-    MAP = auto()
+    LOGOUT = 102
+    GAMES = 107
+    MAP = 110
 
     # Observer actions:
-    OBSERVER_LOGIN = auto()
-    GAME = auto()
+    OBSERVER_LOGIN = 200
+    GAME = 201
 
     # This actions are not available for client:
-    EVENT = auto()
+    EVENT = 202
 
 
 class Result(IntEnum):
