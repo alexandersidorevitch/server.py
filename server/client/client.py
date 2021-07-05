@@ -68,6 +68,7 @@ class Client(AbstractClient):
         """
         data = b''
         while len(data) < CONFIG.RESULT_HEADER + CONFIG.MSGLEN_HEADER:
+            self.logger.debug(data)
             data += self.server.recv(CONFIG.RECEIVE_CHUNK_SIZE)
 
         self.logger.debug(data)
@@ -78,6 +79,7 @@ class Client(AbstractClient):
         data = data[CONFIG.MSGLEN_HEADER:]
 
         while len(data) < message_len:
+            self.logger.debug(data)
             data += self.server.recv(CONFIG.RECEIVE_CHUNK_SIZE)
 
         self.logger.debug(data)
