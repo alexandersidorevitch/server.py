@@ -3,7 +3,7 @@
 import json
 import socket
 from socketserver import BaseRequestHandler, ThreadingTCPServer
-from threading import Thread
+from threading import Lock, Thread
 from typing import Any, Callable
 
 from invoke import task
@@ -52,6 +52,7 @@ class GameServerRequestHandler(BaseRequestHandler):
         self.message = None
         self.data = None
         self.server_role = None
+        self.receive_lock = Lock()
         self._observer_notification_thread = None
         super(GameServerRequestHandler, self).__init__(*args, **kwargs)
 
@@ -207,9 +208,10 @@ class GameServerRequestHandler(BaseRequestHandler):
             self.server_role.instance.idx if self.server_role is not None and self.server_role.instance is not None else
             self.client_address,
             result, resp_message), game=self.game)
-        self.request.sendall(result.to_bytes(CONFIG.RESULT_HEADER, byteorder='little'))
-        self.request.sendall(len(resp_message).to_bytes(CONFIG.MSGLEN_HEADER, byteorder='little'))
-        self.request.sendall(resp_message.encode('utf-8'))
+        with self.receive_lock:
+            self.request.sendall(result.to_bytes(CONFIG.RESULT_HEADER, byteorder='little'))
+            self.request.sendall(len(resp_message).to_bytes(CONFIG.MSGLEN_HEADER, byteorder='little'))
+            self.request.sendall(resp_message.encode('utf-8'))
 
     def error_response(self, result, exception=None):
         if exception is not None:
