@@ -11,7 +11,6 @@ class Observer(Client):
     def __init__(self, address=CONFIG.SERVER_ADDR, port=CONFIG.SERVER_PORT, log_level='INFO'):
         super().__init__(address=address, port=port, level=log_level)
         self.receive_thread = Thread(target=self.receive_notification)
-        self._receive_lock = Lock()
         self.shutdown = False
         self.ACTION_DICT = {
             Action.OBSERVER_LOGIN: self.on_login,
@@ -78,8 +77,8 @@ class Observer(Client):
                     method = self.ACTION_DICT[selected_action]
                     message = method()
                     converted_message = self.convert_message(selected_action, message)
-                    with self._receive_lock:
-                        self.send_message(converted_message)
+
+                    self.send_message(converted_message)
 
                 except ValueError as err:
                     self.logger.warning(err)
@@ -108,8 +107,8 @@ class Observer(Client):
 
     def receive_message(self):
         data = self.receive_headers()
-        with self._receive_lock:
-            return self.receive_data(data)
+
+        return self.receive_data(data)
 
     def receive_notification(self):
         while not self.shutdown:
