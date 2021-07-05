@@ -1,5 +1,5 @@
 import socket
-from threading import Lock, Thread
+from threading import Thread
 
 import errors
 from client.client import Client
@@ -104,11 +104,6 @@ class Observer(Client):
 
             if self.receive_thread.is_alive():
                 self.receive_thread.join(CONFIG.TURN_TIMEOUT)
-
-    def receive_message(self):
-        data = self.receive_headers()
-
-        return self.receive_data(data)
 
     def receive_notification(self):
         while not self.shutdown:

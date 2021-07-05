@@ -3,8 +3,7 @@ import socket
 
 from client.abstract_client import AbstractClient
 from config import CONFIG
-from defs import Action
-from defs import Result
+from defs import Action, Result
 from logger import get_logger
 
 
@@ -67,28 +66,26 @@ class Client(AbstractClient):
     def receive_message(self):
         """ Accepts a message from a connected server
         """
-        data = self.receive_headers()
+        data = b''
+        while len(data) < CONFIG.RESULT_HEADER + CONFIG.MSGLEN_HEADER:
+            data += self.server.recv(CONFIG.RECEIVE_CHUNK_SIZE)
 
-        return self.receive_data(data)
-
-    def receive_data(self, data):
         self.logger.debug(data)
+
         result = Result(int.from_bytes(data[0:CONFIG.ACTION_HEADER], byteorder='little'))
         data = data[CONFIG.ACTION_HEADER:]
         message_len = int.from_bytes(data[0:CONFIG.MSGLEN_HEADER], byteorder='little')
         data = data[CONFIG.MSGLEN_HEADER:]
+
         while len(data) < message_len:
             data += self.server.recv(CONFIG.RECEIVE_CHUNK_SIZE)
+
         self.logger.debug(data)
+
         message = data[:message_len]
         data = data[message_len:]
-        return result, json.loads(message.decode('utf-8') or '{}'), data
 
-    def receive_headers(self):
-        data = b''
-        while len(data) < CONFIG.RESULT_HEADER + CONFIG.MSGLEN_HEADER:
-            data += self.server.recv(CONFIG.RECEIVE_CHUNK_SIZE)
-        return data
+        return result, json.loads(message.decode('utf-8') or '{}'), data
 
     def send_message(self, message: bytes) -> None:
         """ Sends a message to the connected server
