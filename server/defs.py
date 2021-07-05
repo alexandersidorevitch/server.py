@@ -1,6 +1,6 @@
 """ Server definitions.
 """
-from enum import IntEnum, auto
+from enum import IntEnum
 
 
 class Action(IntEnum):
