@@ -209,9 +209,15 @@ class GameServerRequestHandler(BaseRequestHandler):
             self.client_address,
             result, resp_message), game=self.game)
         with self.receive_lock:
-            self.request.sendall(result.to_bytes(CONFIG.RESULT_HEADER, byteorder='little'))
-            self.request.sendall(len(resp_message).to_bytes(CONFIG.MSGLEN_HEADER, byteorder='little'))
-            self.request.sendall(resp_message.encode('utf-8'))
+            res = result.to_bytes(CONFIG.RESULT_HEADER, byteorder='little')
+            log.debug('Send result {}'.format(res))
+            self.request.sendall(res)
+            lenght = len(resp_message).to_bytes(CONFIG.MSGLEN_HEADER, byteorder='little')
+            log.debug('Send len {}'.format(lenght))
+            self.request.sendall(lenght)
+            mes = resp_message.encode('utf-8')
+            log.debug('Send mes {}'.format(mes))
+            self.request.sendall(mes)
 
     def error_response(self, result, exception=None):
         if exception is not None:
